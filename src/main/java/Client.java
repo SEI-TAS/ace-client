@@ -71,7 +71,7 @@ public class Client {
 
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
-        params.put("scope", CBORObject.FromObject("r_temp rw_config foobar"));
+        params.put("scope", CBORObject.FromObject("r_temp"));
         params.put("aud", CBORObject.FromObject("rs1"));
 
         CoapResponse response = client.post(Constants.abbreviate(params).EncodeToBytes(),
