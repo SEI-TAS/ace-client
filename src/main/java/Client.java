@@ -17,6 +17,7 @@ import se.sics.ace.as.Token;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,15 +37,25 @@ public class Client {
         }
     }
 
+    public static void generateTestKey() throws CoseException
+    {
+        OneKey akey = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        OneKey publicKey = akey.PublicKey();
+        String pubStr = Base64.getEncoder().encodeToString(publicKey.EncodeToBytes());
+        System.out.println(pubStr);
+    }
+
     private static CoapEndpoint getCoapsEndpoint() throws CoseException, IOException
     {
-        OneKey asymmetricKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        //OneKey asymmetricKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
+        OneKey publickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
 
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
         builder.setPskStore(new StaticPskStore("clientA", key256));
-        builder.setIdentity(asymmetricKey.AsPrivateKey(), asymmetricKey.AsPublicKey());
-        builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
-        //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
+        //builder.setIdentity(asymmetricKey.AsPrivateKey(), publickey.AsPublicKey());
+        //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
+        builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
 
         DTLSConnector dtlsConnector = new DTLSConnector(builder.build());
         dtlsConnector.start();
