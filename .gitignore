@@ -1,0 +1,12 @@
+*.iml
+*.egg-info/*
+/data
+/dist
+/build
+/logs
+/env
+*.pyc
+.idea/
+.gradle/
+ns3source/
+out/
