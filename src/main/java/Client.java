@@ -43,7 +43,8 @@ public class Client {
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
         builder.setPskStore(new StaticPskStore("clientA", key256));
         builder.setIdentity(asymmetricKey.AsPrivateKey(), asymmetricKey.AsPublicKey());
-        builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
+        builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
+        //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
 
         DTLSConnector dtlsConnector = new DTLSConnector(builder.build());
         dtlsConnector.start();
