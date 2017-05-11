@@ -25,17 +25,7 @@ import java.util.Map;
  * Created by Sebastian on 2017-03-17.
  */
 public class Client {
-    static byte[] key256 = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
-
-    public static void main(String args[])
-    {
-        try {
-            Client.askForToken();
-        } catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+    static byte[] sharedKey256Bytes = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
 
     public static void generateTestKey() throws CoseException
     {
@@ -45,29 +35,30 @@ public class Client {
         System.out.println(pubStr);
     }
 
-    private static CoapEndpoint getCoapsEndpoint() throws CoseException, IOException
+    private CoapEndpoint getCoapsEndpoint() throws CoseException, IOException
     {
         //OneKey asymmetricKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
-        OneKey publickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
-
-        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
-        builder.setPskStore(new StaticPskStore("clientA", key256));
+        //String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
+        //OneKey publickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
         //builder.setIdentity(asymmetricKey.AsPrivateKey(), publickey.AsPublicKey());
         //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
+
+        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
+        builder.setPskStore(new StaticPskStore("clientA", sharedKey256Bytes));
         builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
 
         DTLSConnector dtlsConnector = new DTLSConnector(builder.build());
         dtlsConnector.start();
 
-        CoapEndpoint e = new CoapEndpoint(dtlsConnector, NetworkConfig.getStandard());
-        return e;
+        CoapEndpoint endpoint = new CoapEndpoint(dtlsConnector, NetworkConfig.getStandard());
+        return endpoint;
     }
 
-    public static void askForToken() throws CoseException, IOException, AceException
+    public void askForToken() throws CoseException, IOException, AceException
     {
+        CoapEndpoint coapsEndpoint = getCoapsEndpoint();
         CoapClient client = new CoapClient("coaps://localhost/token");
-        client.setEndpoint(getCoapsEndpoint());
+        client.setEndpoint(coapsEndpoint);
 
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
