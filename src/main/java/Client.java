@@ -54,27 +54,43 @@ public class Client {
         return endpoint;
     }
 
-    public void askForToken() throws CoseException, IOException, AceException
+    public CBORObject askForToken() throws CoseException, IOException, AceException
     {
-        CoapEndpoint coapsEndpoint = getCoapsEndpoint();
-        CoapClient client = new CoapClient("coaps://localhost/token");
-        client.setEndpoint(coapsEndpoint);
-
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
         params.put("scope", CBORObject.FromObject("r_temp"));
         params.put("aud", CBORObject.FromObject("rs1"));
 
-        CoapResponse response = client.post(Constants.abbreviate(params).EncodeToBytes(),
-                                            MediaTypeRegistry.APPLICATION_CBOR);
+        return sendRequest("localhost", "token", Constants.abbreviate(params));
+    }
 
+    public CBORObject askForResource(String tokenInfo) throws CoseException, IOException, AceException
+    {
+        // TODO: sign with COSE to send encoded CWT? Or is it already encoded?
+        return sendRequest("localhost", "auth-info", CBORObject.FromObject(
+                tokenInfo.getBytes(Constants.charset)));
+    }
+
+    private CBORObject sendRequest(String server, String endpointName, CBORObject payload) throws CoseException, IOException, AceException
+    {
+        String uri = "coaps://" + server + "/" + endpointName;
+        CoapEndpoint coapsEndpoint = getCoapsEndpoint();
+        CoapClient client = new CoapClient(uri);
+        client.setEndpoint(coapsEndpoint);
+
+        CoapResponse response = client.post(payload.EncodeToBytes(),
+                MediaTypeRegistry.APPLICATION_CBOR);
+
+        CBORObject res = null;
         if(response != null) {
-            CBORObject res = CBORObject.DecodeFromBytes(response.getPayload());
+            res = CBORObject.DecodeFromBytes(response.getPayload());
             Map<String, CBORObject> map = Constants.unabbreviate(res);
             System.out.println(map);
         }
         else {
             System.out.println("Server did not respond.");
         }
+
+        return res;
     }
 }
