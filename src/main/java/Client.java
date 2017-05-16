@@ -54,24 +54,23 @@ public class Client {
         return endpoint;
     }
 
-    public CBORObject askForToken() throws CoseException, IOException, AceException
+    public Map<String, CBORObject> askForToken(String server) throws CoseException, IOException, AceException
     {
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
         params.put("scope", CBORObject.FromObject("r_temp"));
         params.put("aud", CBORObject.FromObject("rs1"));
 
-        return sendRequest("localhost", "token", Constants.abbreviate(params));
+        return sendRequest(server, "token", Constants.abbreviate(params));
     }
 
-    public CBORObject askForResource(String tokenInfo) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> askForResource(String server, CBORObject token) throws CoseException, IOException, AceException
     {
-        // TODO: sign with COSE to send encoded CWT? Or is it already encoded?
-        return sendRequest("localhost", "auth-info", CBORObject.FromObject(
-                tokenInfo.getBytes(Constants.charset)));
+        // CWT token has been encoded with the "shared by all" PSK we are using to test.
+        return sendRequest(server, "auth-info", token);
     }
 
-    private CBORObject sendRequest(String server, String endpointName, CBORObject payload) throws CoseException, IOException, AceException
+    private Map<String, CBORObject> sendRequest(String server, String endpointName, CBORObject payload) throws CoseException, IOException, AceException
     {
         String uri = "coaps://" + server + "/" + endpointName;
         CoapEndpoint coapsEndpoint = getCoapsEndpoint();
@@ -81,16 +80,16 @@ public class Client {
         CoapResponse response = client.post(payload.EncodeToBytes(),
                 MediaTypeRegistry.APPLICATION_CBOR);
 
-        CBORObject res = null;
+        Map<String, CBORObject> map = null;
         if(response != null) {
-            res = CBORObject.DecodeFromBytes(response.getPayload());
-            Map<String, CBORObject> map = Constants.unabbreviate(res);
+            CBORObject res = CBORObject.DecodeFromBytes(response.getPayload());
+            map = Constants.unabbreviate(res);
             System.out.println(map);
         }
         else {
             System.out.println("Server did not respond.");
         }
 
-        return res;
+        return map;
     }
 }
