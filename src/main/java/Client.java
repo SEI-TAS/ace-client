@@ -7,6 +7,7 @@ import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.scandium.DTLSConnector;
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
@@ -67,7 +68,7 @@ public class Client {
     public Map<String, CBORObject> askForResource(String server, CBORObject token) throws CoseException, IOException, AceException
     {
         // CWT token has been encoded with the "shared by all" PSK we are using to test.
-        return sendRequest(server, "auth-info", token);
+        return sendRequest(server, "authz-info", token);
     }
 
     private Map<String, CBORObject> sendRequest(String server, String endpointName, CBORObject payload) throws CoseException, IOException, AceException
@@ -77,8 +78,10 @@ public class Client {
         CoapClient client = new CoapClient(uri);
         client.setEndpoint(coapsEndpoint);
 
+        System.out.println("Sending request to server: " + uri);
         CoapResponse response = client.post(payload.EncodeToBytes(),
                 MediaTypeRegistry.APPLICATION_CBOR);
+        System.out.println("Response: " + Utils.prettyPrint(response));
 
         Map<String, CBORObject> map = null;
         if(response != null) {
