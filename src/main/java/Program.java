@@ -16,12 +16,17 @@ public class Program {
     public static void main(String args[])
     {
         try {
+            String clientId = "clientA";
 
-            Client client = new Client();
-            Map<String, CBORObject> reply = client.askForToken("localhost:5684");
+            Client asClient = new Client(clientId, "localhost:5684");
+            Map<String, CBORObject> reply = asClient.askForToken();
             CBORObject token = reply.get("access_token");
-            System.out.println(token);
-            client.askForResource("localhost:5685", token);
+            System.out.println("Token :" + token);
+            CBORObject popKey = reply.get("cnf");
+            System.out.println("Cnf: " + popKey);
+
+            Client rsClient = new Client(clientId, "localhost:5685");
+            rsClient.askForResource(token);
         } catch(Exception e)
         {
             e.printStackTrace();

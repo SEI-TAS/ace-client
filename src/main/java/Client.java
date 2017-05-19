@@ -5,6 +5,7 @@ import com.upokecenter.cbor.CBORObject;
 import com.upokecenter.cbor.CBORType;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.config.NetworkConfig;
@@ -29,24 +30,19 @@ import java.util.Map;
 public class Client {
     static byte[] sharedKey256Bytes = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
 
-    public static void generateTestKey() throws CoseException
+    private String clientId;
+    private String serverUrl;
+
+    public Client(String clientId, String serverUrl)
     {
-        OneKey akey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        OneKey publicKey = akey.PublicKey();
-        String pubStr = Base64.getEncoder().encodeToString(publicKey.EncodeToBytes());
-        System.out.println(pubStr);
+        this.clientId = clientId;
+        this.serverUrl = serverUrl;
     }
 
     private CoapEndpoint getCoapsEndpoint() throws CoseException, IOException
     {
-        //OneKey asymmetricKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        //String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
-        //OneKey publickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
-        //builder.setIdentity(asymmetricKey.AsPrivateKey(), publickey.AsPublicKey());
-        //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
-
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
-        builder.setPskStore(new StaticPskStore("clientA", sharedKey256Bytes));
+        builder.setPskStore(new StaticPskStore(clientId, sharedKey256Bytes));
         builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
 
         DTLSConnector dtlsConnector = new DTLSConnector(builder.build());
@@ -56,20 +52,20 @@ public class Client {
         return endpoint;
     }
 
-    public Map<String, CBORObject> askForToken(String server) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> askForToken() throws CoseException, IOException, AceException
     {
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
         params.put("scope", CBORObject.FromObject("r_temp"));
         params.put("aud", CBORObject.FromObject("rs1"));
 
-        return sendRequest(server, "token", Constants.abbreviate(params));
+        return sendRequest(serverUrl, "token", Constants.abbreviate(params));
     }
 
-    public Map<String, CBORObject> askForResource(String server, CBORObject token) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> askForResource(CBORObject token) throws CoseException, IOException, AceException
     {
         // CWT token has been encoded with the "shared by all" PSK we are using to test.
-        return sendRequest(server, "authz-info", token);
+        return sendRequest(serverUrl, "authz-info", token);
     }
 
     private Map<String, CBORObject> sendRequest(String server, String endpointName, CBORObject payload) throws CoseException, IOException, AceException
@@ -84,10 +80,19 @@ public class Client {
                 MediaTypeRegistry.APPLICATION_CBOR);
         System.out.println("Response: " + Utils.prettyPrint(response));
 
+        if(response.getCode() != CoAP.ResponseCode.CREATED)
+        {
+            System.out.println("Error received in response: " + response.getCode());
+            return null;
+        }
+
         Map<String, CBORObject> map = null;
         if(response != null) {
             CBORObject res = CBORObject.DecodeFromBytes(response.getPayload());
-            System.out.println("Response CBOR: " + res);
+            System.out.println("Response Payload: " + res);
+
+
+
             if(!res.getType().equals(CBORType.Map))
             {
                 map = new HashMap<>();
@@ -103,5 +108,19 @@ public class Client {
         }
 
         return map;
+    }
+
+    public static void generateTestKey() throws CoseException
+    {
+        //OneKey asymmetricKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        //String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
+        //OneKey publickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
+        //builder.setIdentity(asymmetricKey.AsPrivateKey(), publickey.AsPublicKey());
+        //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
+
+        OneKey akey = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        OneKey publicKey = akey.PublicKey();
+        String pubStr = Base64.getEncoder().encodeToString(publicKey.EncodeToBytes());
+        System.out.println(pubStr);
     }
 }
