@@ -2,6 +2,7 @@ import COSE.AlgorithmID;
 import COSE.CoseException;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
+import com.upokecenter.cbor.CBORType;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
@@ -86,7 +87,15 @@ public class Client {
         Map<String, CBORObject> map = null;
         if(response != null) {
             CBORObject res = CBORObject.DecodeFromBytes(response.getPayload());
-            map = Constants.unabbreviate(res);
+            System.out.println("Response CBOR: " + res);
+            if(!res.getType().equals(CBORType.Map))
+            {
+                map = new HashMap<>();
+                map.put("reply", res);
+            }
+            else {
+                map = Constants.unabbreviate(res);
+            }
             System.out.println(map);
         }
         else {
