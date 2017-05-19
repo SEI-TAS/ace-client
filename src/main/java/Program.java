@@ -26,7 +26,7 @@ public class Program {
             System.out.println("Cnf: " + popKey);
 
             Client rsClient = new Client(clientId, "localhost:5685");
-            rsClient.askForResource(token);
+            rsClient.postToken(token);
         } catch(Exception e)
         {
             e.printStackTrace();

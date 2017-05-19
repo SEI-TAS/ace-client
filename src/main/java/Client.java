@@ -39,11 +39,15 @@ public class Client {
         this.serverUrl = serverUrl;
     }
 
-    private CoapEndpoint getCoapsEndpoint() throws CoseException, IOException
+    private CoapEndpoint getCoapsEndpoint(boolean setIdentity) throws CoseException, IOException
     {
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
-        builder.setPskStore(new StaticPskStore(clientId, sharedKey256Bytes));
         builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
+
+        if(setIdentity)
+        {
+            builder.setPskStore(new StaticPskStore(clientId, sharedKey256Bytes));
+        }
 
         DTLSConnector dtlsConnector = new DTLSConnector(builder.build());
         dtlsConnector.start();
@@ -59,19 +63,19 @@ public class Client {
         params.put("scope", CBORObject.FromObject("r_temp"));
         params.put("aud", CBORObject.FromObject("rs1"));
 
-        return sendRequest(serverUrl, "token", Constants.abbreviate(params));
+        return sendRequest(serverUrl, "token", Constants.abbreviate(params), true);
     }
 
-    public Map<String, CBORObject> askForResource(CBORObject token) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> postToken(CBORObject token) throws CoseException, IOException, AceException
     {
         // CWT token has been encoded with the "shared by all" PSK we are using to test.
-        return sendRequest(serverUrl, "authz-info", token);
+        return sendRequest(serverUrl, "authz-info", token, true);
     }
 
-    private Map<String, CBORObject> sendRequest(String server, String endpointName, CBORObject payload) throws CoseException, IOException, AceException
+    private Map<String, CBORObject> sendRequest(String server, String endpointName, CBORObject payload, boolean sendIdentity) throws CoseException, IOException, AceException
     {
         String uri = "coaps://" + server + "/" + endpointName;
-        CoapEndpoint coapsEndpoint = getCoapsEndpoint();
+        CoapEndpoint coapsEndpoint = getCoapsEndpoint(sendIdentity);
         CoapClient client = new CoapClient(uri);
         client.setEndpoint(coapsEndpoint);
 
@@ -90,9 +94,6 @@ public class Client {
         if(response != null) {
             CBORObject res = CBORObject.DecodeFromBytes(response.getPayload());
             System.out.println("Response Payload: " + res);
-
-
-
             if(!res.getType().equals(CBORType.Map))
             {
                 map = new HashMap<>();
