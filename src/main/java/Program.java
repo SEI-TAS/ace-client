@@ -18,15 +18,19 @@ public class Program {
         try {
             String clientId = "clientA";
 
-            Client asClient = new Client(clientId, "localhost:5684");
+            Client asClient = new Client(clientId, "localhost", 5684);
             Map<String, CBORObject> reply = asClient.askForToken();
-            CBORObject token = reply.get("access_token");
-            System.out.println("Token :" + token);
-            CBORObject popKey = reply.get("cnf");
-            System.out.println("Cnf: " + popKey);
+            if(reply != null) {
+                CBORObject token = reply.get("access_token");
+                System.out.println("Token :" + token);
+                CBORObject popKey = reply.get("cnf");
+                System.out.println("Cnf: " + popKey);
+                CBORObject keyData = popKey.get(Constants.COSE_KEY_CBOR);
+                System.out.println("Cnf key: " + keyData);
 
-            Client rsClient = new Client(clientId, "localhost:5685");
-            rsClient.postToken(token);
+                Client rsClient = new Client(clientId, "localhost", 5685);
+                rsClient.sendRequest("temp", token, new OneKey(keyData));
+            }
         } catch(Exception e)
         {
             e.printStackTrace();
@@ -49,8 +53,8 @@ public class Program {
 
             CBORObject tokenPayload = GetToken.getClientCredentialsRequest(CBORObject.FromObject("rs1"),
                     CBORObject.FromObject("r_temp"), null);
-            CBORObject token = DTLSProfileRequests.getToken(asUri, tokenPayload, sharedKey);
-            DTLSProfileRequests.postToken(rsUri, token, true);
+            //CBORObject token = DTLSProfileRequests.getToken(asUri, tokenPayload, sharedKey);
+            //DTLSProfileRequests.postToken(rsUri, token, true);
         } catch(Exception e)
         {
             e.printStackTrace();
