@@ -19,7 +19,7 @@ public class Program {
             String clientId = "clientA";
 
             Client asClient = new Client(clientId, "localhost", 5684);
-            Map<String, CBORObject> reply = asClient.askForToken();
+            Map<String, CBORObject> reply = asClient.askForToken("r_temp","rs1");
             if(reply != null) {
                 CBORObject token = reply.get("access_token");
                 System.out.println("Token :" + token);
