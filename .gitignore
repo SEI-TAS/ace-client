@@ -10,3 +10,4 @@
 .gradle/
 ns3source/
 out/
+/.DS_Store

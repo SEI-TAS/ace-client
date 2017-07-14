@@ -1,14 +1,4 @@
-import COSE.AlgorithmID;
-import COSE.CoseException;
-import COSE.KeyKeys;
-import COSE.OneKey;
-import com.upokecenter.cbor.CBORObject;
-import se.sics.ace.Constants;
-import se.sics.ace.client.GetToken;
-import se.sics.ace.coap.client.DTLSProfileRequests;
 
-import java.util.Base64;
-import java.util.Map;
 
 /**
  * Created by Sebastian on 2017-05-11.
@@ -18,30 +8,14 @@ public class Program {
     public static void main(String args[])
     {
         try {
-            String clientId = "clientA";
-
-            // This should be obtained as the result of pairing.
-            byte[] AS256BytesPSK = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
-
-            Client asClient = new Client(clientId, "localhost", 5684, AS256BytesPSK);
-            Map<String, CBORObject> reply = asClient.askForToken("r_temp","rs1");
-            if(reply != null) {
-                CBORObject token = reply.get("access_token");
-                System.out.println("Token :" + token);
-                CBORObject popKey = reply.get("cnf");
-                System.out.println("Cnf: " + popKey);
-                CBORObject rsKeyData = popKey.get(Constants.COSE_KEY_CBOR);
-                System.out.println("Cnf key: " + rsKeyData);
-
-                Client rsClient = new Client(clientId, "localhost", 5685, new OneKey(rsKeyData));
-                rsClient.sendRequest("temp", token, true);
-            }
-        } catch(Exception e)
+            Controller controller = new Controller();
+            controller.run();
+        }
+        catch(Exception e)
         {
             e.printStackTrace();
         }
     }
-
 //
 //    // NOTE: this does not work as it requires RPK, not PSK, which is not what we are using...
 //    public static void requestsUsingLib()
