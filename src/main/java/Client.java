@@ -1,5 +1,6 @@
 import COSE.AlgorithmID;
 import COSE.CoseException;
+import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 import com.upokecenter.cbor.CBORType;
@@ -30,24 +31,35 @@ import java.util.Map;
  * Created by Sebastian on 2017-03-17.
  */
 public class Client {
-    static byte[] sharedKey256Bytes = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
-
     private String clientId;
     private String serverName;
     private int serverPort;
+    private byte[] pskData;
+    private OneKey psk;
 
-    public Client(String clientId, String serverName, int port)
+    public Client(String clientId, String serverName, int port, byte[] pskData) throws COSE.CoseException
     {
         this.clientId = clientId;
         this.serverName = serverName;
         this.serverPort = port;
+        this.pskData = pskData;
+        this.psk = createOneKeyFromBytes(pskData);
+    }
+
+    public Client(String clientId, String serverName, int port, OneKey psk) throws COSE.CoseException
+    {
+        this.clientId = clientId;
+        this.serverName = serverName;
+        this.serverPort = port;
+        this.pskData = null;
+        this.psk = psk;
     }
 
     private Connector setupDTLSConnector() throws CoseException, IOException
     {
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));
         builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
-        builder.setPskStore(new StaticPskStore(clientId, sharedKey256Bytes));
+        builder.setPskStore(new StaticPskStore(clientId, pskData));
         DTLSConnector dtlsConnector = new DTLSConnector(builder.build());
         dtlsConnector.start();
         return dtlsConnector;
@@ -60,21 +72,22 @@ public class Client {
         params.put("scope", CBORObject.FromObject(scope));
         params.put("aud", CBORObject.FromObject(audience));
 
-        return sendRequest("token", Constants.abbreviate(params), null);
+        return sendRequest("token", Constants.abbreviate(params), false);
     }
 
-    public Map<String, CBORObject> postToken(CBORObject token, OneKey psk) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> postToken(CBORObject token) throws CoseException, IOException, AceException
     {
         // CWT token has been encoded with the "shared by all" PSK we are using to test.
-        return sendRequest("authz-info", token, psk);
+        return sendRequest("authz-info", token, true);
     }
 
-    public Map<String, CBORObject> sendRequest(String endpointName, CBORObject payload, OneKey psk) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> sendRequest(String endpointName, CBORObject payload, boolean rsRequest) throws CoseException, IOException, AceException
     {
         String uri = "coaps://" + serverName + ":" + serverPort + "/" + endpointName;
 
         CoapClient client;
-        if(psk != null){
+        if(rsRequest){
+            // Gets a special client that can send the token as its identity in a request for a RS.
             client = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), payload, psk);
             client.setURI(uri);
         }
@@ -130,17 +143,12 @@ public class Client {
         return map;
     }
 
-    public static void generateTestKey() throws CoseException
+    private OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException
     {
-        //OneKey asymmetricKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        //String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
-        //OneKey publickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
-        //builder.setIdentity(asymmetricKey.AsPrivateKey(), publickey.AsPublicKey());
-        //builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8});
-
-        OneKey akey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        OneKey publicKey = akey.PublicKey();
-        String pubStr = Base64.getEncoder().encodeToString(publicKey.EncodeToBytes());
-        System.out.println(pubStr);
+        CBORObject keyData = CBORObject.NewMap();
+        keyData.Add(KeyKeys.KeyType.AsCBOR(), KeyKeys.KeyType_Octet);
+        keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(rawKey));
+        OneKey key = new OneKey(keyData);
+        return key;
     }
 }
