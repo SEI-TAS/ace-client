@@ -35,37 +35,40 @@ public class Client {
     private OneKey psk;
     private CoapClient coapClient;
 
-    public Client(String clientId, String serverName, int port, OneKey psk) throws COSE.CoseException
+    private CBORObject accessToken;
+
+    public Client(String clientId, String serverName, int port, OneKey psk, CBORObject token) throws COSE.CoseException
     {
         this.clientId = clientId;
         this.serverName = serverName;
         this.serverPort = port;
         this.psk = psk;
+        this.accessToken = token;
     }
 
-    public Map<String, CBORObject> askForToken(String scope, String audience) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> getAccessToken(String scope, String audience) throws CoseException, IOException, AceException
     {
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
         params.put("scope", CBORObject.FromObject(scope));
         params.put("aud", CBORObject.FromObject(audience));
 
-        return sendRequest("token", Constants.abbreviate(params), false);
+        return sendRequest("token", "post", Constants.abbreviate(params));
     }
 
-    public Map<String, CBORObject> postToken(CBORObject token) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> postToken() throws CoseException, IOException, AceException
     {
-        return sendRequest("authz-info", token, true);
+        return sendRequest("authz-info", "post", accessToken);
     }
 
     // Sends a COAP/DTLS request to the server we are configured to connect to.
-    public Map<String, CBORObject> sendRequest(String endpointName, CBORObject payload, boolean rsRequest) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> sendRequest(String endpointName, String method, CBORObject payload) throws CoseException, IOException, AceException
     {
         String uri = "coaps://" + serverName + ":" + serverPort + "/" + endpointName;
 
-        if(rsRequest){
+        if(accessToken != null){
             // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
-            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), payload, psk);
+            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), accessToken, psk);
             coapClient.setURI(uri);
         }
         else {
@@ -77,7 +80,15 @@ public class Client {
         }
 
         System.out.println("Sending request to server: " + uri);
-        CoapResponse response = coapClient.post(payload.EncodeToBytes(), MediaTypeRegistry.APPLICATION_CBOR);
+        CoapResponse response = null;
+        if(method.equals("post")) {
+            response = coapClient.post(payload.EncodeToBytes(), MediaTypeRegistry.APPLICATION_CBOR);
+        }
+        else if(method.equals("get"))
+        {
+            response = coapClient.get();
+        }
+
         Map<String, CBORObject> map = null;
         if(response == null) {
             System.out.println("Server did not respond.");
@@ -120,7 +131,7 @@ public class Client {
         return map;
     }
 
-    // Creates and starts a DTL connector with this client's ID and AS-PSK.
+    // Creates and starts a DTL connector with this client's ID and the assigned PSK.
     private Connector setupDTLSConnector() throws CoseException, IOException
     {
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(0));

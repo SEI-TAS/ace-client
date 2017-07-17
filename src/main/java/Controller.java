@@ -1,16 +1,10 @@
-import COSE.AlgorithmID;
-import COSE.CoseException;
 import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
-import se.sics.ace.client.GetToken;
-import se.sics.ace.coap.client.DTLSProfileRequests;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -27,13 +21,16 @@ public class Controller {
     private String clientId = null;
     private OneKey asPSK = null;
 
+    private CBORObject token = null;
+    private OneKey rsPSK = null;
+
     public void run() throws COSE.CoseException, IOException, AceException
     {
         Scanner scanner = new Scanner(System.in);
 
         while(true) {
             System.out.println("");
-            System.out.println("Choose (p)air, (r)equest token and resource, or (q)uit: ");
+            System.out.println("Choose (p)air, (t)oken request, (r)esource request, or (q)uit: ");
             char choice = scanner.next().charAt(0);
 
             switch (choice) {
@@ -41,8 +38,11 @@ public class Controller {
                     pair();
                     System.out.println("Paired!");
                     break;
+                case 't':
+                    requestToken("rs1", "r_temp");
+                    break;
                 case 'r':
-                    requestTokenAndData("rs1", "temp", "r_temp");
+                    requestResource("temp");
                     break;
                 case 'q':
                     System.exit(0);
@@ -60,7 +60,7 @@ public class Controller {
         asPSK = createOneKeyFromBytes(AS256BytesPSK);
     }
 
-    public void requestTokenAndData(String rsName, String rsResource, String rsScope) throws COSE.CoseException, IOException, AceException
+    public void requestToken(String rsName, String rsScope) throws COSE.CoseException, IOException, AceException
     {
         if(clientId == null || asPSK == null)
         {
@@ -68,11 +68,11 @@ public class Controller {
             return;
         }
 
-        Client asClient = new Client(clientId, AS_IP, AS_PORT, asPSK);
-        Map<String, CBORObject> reply = asClient.askForToken(rsScope,rsName);
+        Client asClient = new Client(clientId, AS_IP, AS_PORT, asPSK, null);
+        Map<String, CBORObject> reply = asClient.getAccessToken(rsScope, rsName);
         if(reply != null) {
             asClient.stop();
-            CBORObject token = reply.get("access_token");
+            token = reply.get("access_token");
             System.out.println("Token :" + token);
 
             CBORObject popKey = reply.get("cnf");
@@ -81,10 +81,20 @@ public class Controller {
             CBORObject rsKeyData = popKey.get(Constants.COSE_KEY_CBOR);
             System.out.println("Cnf key: " + rsKeyData);
 
-            Client rsClient = new Client(clientId, RS_IP, RS_PORT, new OneKey(rsKeyData));
-            rsClient.sendRequest(rsResource, token, true);
-            rsClient.stop();
+            rsPSK = new OneKey(rsKeyData);
         }
+    }
+
+    public void requestResource(String rsResource) throws COSE.CoseException, IOException, AceException
+    {
+        if(rsPSK == null || token == null) {
+            System.out.println("Token and POP not obtained yet.");
+            return;
+        }
+
+        Client rsClient = new Client(clientId, RS_IP, RS_PORT, rsPSK, token);
+        rsClient.sendRequest(rsResource, "get", null);
+        rsClient.stop();
     }
 
     // Creates a OneKey from raw key data.
