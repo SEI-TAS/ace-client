@@ -71,7 +71,6 @@ public class Controller {
         Client asClient = new Client(clientId, AS_IP, AS_PORT, asPSK, null);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScope, rsName);
         if(reply != null) {
-            asClient.stop();
             token = reply.get("access_token");
             System.out.println("Token :" + token);
 
@@ -83,6 +82,7 @@ public class Controller {
 
             rsPSK = new OneKey(rsKeyData);
         }
+        asClient.stop();
     }
 
     public void requestResource(String rsResource) throws COSE.CoseException, IOException, AceException
