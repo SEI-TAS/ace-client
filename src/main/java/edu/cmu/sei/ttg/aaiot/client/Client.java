@@ -1,3 +1,5 @@
+package edu.cmu.sei.ttg.aaiot.client;
+
 import COSE.CoseException;
 import COSE.KeyKeys;
 import COSE.OneKey;

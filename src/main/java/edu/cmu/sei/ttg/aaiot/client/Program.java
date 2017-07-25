@@ -1,4 +1,4 @@
-
+package edu.cmu.sei.ttg.aaiot.client;
 
 /**
  * Created by Sebastian on 2017-05-11.

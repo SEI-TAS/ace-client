@@ -1,6 +1,11 @@
+package edu.cmu.sei.ttg.aaiot.client;
+
 import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.client.cc2531.CC2531Controller;
+import edu.cmu.sei.ttg.aaiot.client.pairing.ICredentialStore;
+import edu.cmu.sei.ttg.aaiot.client.pairing.PairingManager;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 
@@ -11,20 +16,22 @@ import java.util.Scanner;
 /**
  * Created by Sebastian on 2017-07-11.
  */
-public class Controller {
+public class Controller implements ICredentialStore {
 
     private static final String AS_IP = "localhost";
     private static final int AS_PORT = 5684;
     private static final String RS_IP = "localhost";
     private static final int RS_PORT = 5685;
 
-    private String clientId = null;
+    private static final String clientId = "clientA";
+
+    private String asId = null;
     private OneKey asPSK = null;
 
     private CBORObject token = null;
     private OneKey rsPSK = null;
 
-    public void run() throws COSE.CoseException, IOException, AceException
+    public void run() throws COSE.CoseException, IOException, AceException, javax.usb.UsbException
     {
         Scanner scanner = new Scanner(System.in);
 
@@ -46,6 +53,10 @@ public class Controller {
                     break;
                 case 'q':
                     System.exit(0);
+                case 'u':
+                    System.out.println("USB test");
+                    CC2531Controller cc2531 = new CC2531Controller();
+                    break;
                 default:
                     System.out.println("Invalid command.");
             }
@@ -53,18 +64,19 @@ public class Controller {
 
     }
 
-    public void pair() throws COSE.CoseException
+    public void pair() throws IOException
     {
-        clientId = "clientA";
-        byte[] AS256BytesPSK = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
-        asPSK = createOneKeyFromBytes(AS256BytesPSK);
+        //byte[] AS256BytesPSK = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
+        //asPSK = createOneKeyFromBytes(AS256BytesPSK);
+        PairingManager pairingManager = new PairingManager(this);
+        pairingManager.startPairing();
     }
 
     public void requestToken(String rsName, String rsScope) throws COSE.CoseException, IOException, AceException
     {
-        if(clientId == null || asPSK == null)
+        if(asPSK == null)
         {
-            System.out.println("Client not paired yet.");
+            System.out.println("edu.cmu.sei.ttg.aaiot.client.Client not paired yet.");
             return;
         }
 
@@ -105,6 +117,28 @@ public class Controller {
         keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(rawKey));
         OneKey key = new OneKey(keyData);
         return key;
+    }
+
+    @Override
+    public String getId()
+    {
+        return clientId;
+    }
+
+    @Override
+    public boolean storeAS(String asId, byte[] psk)
+    {
+        try
+        {
+            this.asId = asId;
+            this.asPSK = createOneKeyFromBytes(psk);
+            return true;
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Error storing AS key: " + ex.toString());
+            return false;
+        }
     }
 
 }
