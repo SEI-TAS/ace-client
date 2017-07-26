@@ -1,4 +1,4 @@
-package edu.cmu.sei.ttg.aaiot.cc2531;
+package edu.cmu.sei.ttg.aaiot.client.cc2531;
 
 import javax.usb.*;
 import java.util.List;

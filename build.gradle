@@ -11,5 +11,7 @@ repositories {
 
 dependencies {
     compile group: 'se.sics', name: 'ace', version: '0.0.1-SNAPSHOT'
+    compile group: 'org.usb4java', name: 'usb4java-javax', version: '1.2.0'
+    compile group: 'edu.cmu.sei.ttg', name: 'aaiot-network', version: '0.0.1-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }

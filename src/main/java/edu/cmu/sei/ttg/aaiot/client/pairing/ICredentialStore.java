@@ -5,4 +5,6 @@ package edu.cmu.sei.ttg.aaiot.client.pairing;
  */
 public interface ICredentialStore
 {
+    String getId();
+    boolean storeAS(String id, byte[] psk);
 }
