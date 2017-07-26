@@ -18,10 +18,11 @@ import java.util.Scanner;
  */
 public class Controller implements ICredentialStore {
 
-    private static final String AS_IP = "localhost";
     private static final int AS_PORT = 5684;
-    private static final String RS_IP = "localhost";
     private static final int RS_PORT = 5685;
+
+    private static final String AS_IP = "localhost";
+    private static final String RS_IP = "localhost";
 
     private static final String clientId = "clientA";
 
