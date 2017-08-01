@@ -38,14 +38,19 @@ public class Client {
     private CoapClient coapClient;
 
     private CBORObject accessToken;
+    private String kid;
 
-    public Client(String clientId, String serverName, int port, OneKey psk, CBORObject token) throws COSE.CoseException
+    private boolean tokenSent = false;
+
+    public Client(String clientId, String serverName, int port, OneKey psk, CBORObject token, String kid, boolean tokenSent) throws COSE.CoseException
     {
         this.clientId = clientId;
         this.serverName = serverName;
         this.serverPort = port;
         this.psk = psk;
         this.accessToken = token;
+        this.kid = kid;
+        this.tokenSent = tokenSent;
     }
 
     public Map<String, CBORObject> getAccessToken(String scope, String audience) throws CoseException, IOException, AceException
@@ -69,8 +74,16 @@ public class Client {
         String uri = "coaps://" + serverName + ":" + serverPort + "/" + endpointName;
 
         if(accessToken != null){
-            // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
-            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), accessToken, psk);
+            if(!tokenSent)
+            {
+                // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
+                coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), accessToken, psk);
+            }
+            else
+            {
+                // If the token was previously sent, we need to set the kid.
+                coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), kid, psk);
+            }
             coapClient.setURI(uri);
         }
         else {
@@ -109,6 +122,7 @@ public class Client {
             return null;
         }
 
+        // We assume by now things went well and token was accepted.
         CBORObject responseData = null;
         try {
             responseData = CBORObject.DecodeFromBytes(response.getPayload());

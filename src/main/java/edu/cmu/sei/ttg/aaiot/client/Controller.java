@@ -30,7 +30,10 @@ public class Controller implements ICredentialStore {
     private OneKey asPSK = null;
 
     private CBORObject token = null;
+    private String kid = null;
     private OneKey rsPSK = null;
+
+    private boolean tokenSent = false;
 
     public void run() throws COSE.CoseException, IOException, AceException, javax.usb.UsbException
     {
@@ -81,17 +84,22 @@ public class Controller implements ICredentialStore {
             return;
         }
 
-        Client asClient = new Client(clientId, AS_IP, AS_PORT, asPSK, null);
+        Client asClient = new Client(clientId, AS_IP, AS_PORT, asPSK, null, null, tokenSent);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScope, rsName);
         if(reply != null) {
             token = reply.get("access_token");
             System.out.println("Token :" + token);
+            tokenSent = false;
 
             CBORObject popKey = reply.get("cnf");
             System.out.println("Cnf: " + popKey);
 
             CBORObject rsKeyData = popKey.get(Constants.COSE_KEY_CBOR);
             System.out.println("Cnf key: " + rsKeyData);
+
+            CBORObject kidCbor = rsKeyData.get(KeyKeys.KeyId.AsCBOR());
+            kid = new String(kidCbor.GetByteString(), Constants.charset);
+            System.out.println("Cnf key id: " + kid);
 
             rsPSK = new OneKey(rsKeyData);
         }
@@ -105,8 +113,9 @@ public class Controller implements ICredentialStore {
             return;
         }
 
-        Client rsClient = new Client(clientId, RS_IP, RS_PORT, rsPSK, token);
+        Client rsClient = new Client(clientId, RS_IP, RS_PORT, rsPSK, token, kid, tokenSent);
         rsClient.sendRequest(rsResource, "get", null);
+        tokenSent = true;
         rsClient.stop();
     }
 
