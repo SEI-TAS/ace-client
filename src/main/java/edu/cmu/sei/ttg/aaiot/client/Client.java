@@ -160,6 +160,7 @@ public class Client {
 
     public void stop()
     {
+        coapClient.getEndpoint().stop();
         coapClient.shutdown();
     }
 }
