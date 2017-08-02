@@ -17,14 +17,10 @@ import java.util.Scanner;
  * Created by Sebastian on 2017-07-11.
  */
 public class Controller implements ICredentialStore {
+    private static final String CONFIG_FILE = "src/main/resources/config.json";
 
     private static final int AS_PORT = 5684;
     private static final int RS_PORT = 5685;
-
-    private static final String AS_IP = "localhost";
-    private static final String RS_IP = "localhost";
-
-    private static final String clientId = "clientA";
 
     private String asId = null;
     private OneKey asPSK = null;
@@ -37,6 +33,8 @@ public class Controller implements ICredentialStore {
 
     public void run() throws COSE.CoseException, IOException, AceException, javax.usb.UsbException
     {
+        Config.load(CONFIG_FILE);
+
         Scanner scanner = new Scanner(System.in);
 
         while(true) {
@@ -46,8 +44,15 @@ public class Controller implements ICredentialStore {
 
             switch (choice) {
                 case 'p':
-                    pair();
-                    System.out.println("Finished pairing process!");
+                    boolean success = pair();
+                    if(success)
+                    {
+                        System.out.println("Finished pairing process!");
+                    }
+                    else
+                    {
+                        System.out.println("Pairing aborted.");
+                    }
                     break;
                 case 't':
                     requestToken("rs1", "r_temp");
@@ -68,12 +73,19 @@ public class Controller implements ICredentialStore {
 
     }
 
-    public void pair() throws IOException
+    public boolean pair() throws IOException
     {
-        //byte[] AS256BytesPSK = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
-        //asPSK = createOneKeyFromBytes(AS256BytesPSK);
-        PairingManager pairingManager = new PairingManager(this);
-        pairingManager.startPairing();
+        try
+        {
+            PairingManager pairingManager = new PairingManager(this);
+            pairingManager.startPairing();
+            return true;
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Error pairing: " + ex.toString());
+            return false;
+        }
     }
 
     public void requestToken(String rsName, String rsScope) throws COSE.CoseException, IOException, AceException
@@ -84,7 +96,7 @@ public class Controller implements ICredentialStore {
             return;
         }
 
-        Client asClient = new Client(clientId, AS_IP, AS_PORT, asPSK, null, null, tokenSent);
+        Client asClient = new Client(Config.data.get("id"), Config.data.get("AS_IP"), AS_PORT, asPSK, null, null, tokenSent);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScope, rsName);
         if(reply != null) {
             token = reply.get("access_token");
@@ -113,7 +125,7 @@ public class Controller implements ICredentialStore {
             return;
         }
 
-        Client rsClient = new Client(clientId, RS_IP, RS_PORT, rsPSK, token, kid, tokenSent);
+        Client rsClient = new Client(Config.data.get("id"), Config.data.get("RS_IP"), RS_PORT, rsPSK, token, kid, tokenSent);
         rsClient.sendRequest(rsResource, "get", null);
         tokenSent = true;
         rsClient.stop();
@@ -132,7 +144,7 @@ public class Controller implements ICredentialStore {
     @Override
     public String getId()
     {
-        return clientId;
+        return Config.data.get("id");
     }
 
     @Override

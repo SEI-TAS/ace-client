@@ -1,0 +1,5 @@
+{
+  "id" : "clientA",
+  "AS_IP": "localhost",
+  "RS_IP": "localhost"
+}
