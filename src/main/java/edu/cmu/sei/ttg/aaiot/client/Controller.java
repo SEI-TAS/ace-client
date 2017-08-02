@@ -47,7 +47,7 @@ public class Controller implements ICredentialStore {
             switch (choice) {
                 case 'p':
                     pair();
-                    System.out.println("Paired!");
+                    System.out.println("Finished pairing process!");
                     break;
                 case 't':
                     requestToken("rs1", "r_temp");

@@ -59,6 +59,8 @@ public class PairingManager implements IMessageHandler
                     System.out.println("Sending reply to port " + sourcePort);
                     udpClient.sendData("a" + separator + "c" + separator + clientId);
                     udpClient.close();
+
+                    System.out.println("Paired!");
                 }
                 catch(IOException | InterruptedException ex)
                 {
