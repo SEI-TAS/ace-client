@@ -55,10 +55,11 @@ public class Controller implements ICredentialStore {
                     }
                     break;
                 case 't':
-                    requestToken("rs1", "r_temp");
+                    requestToken("rs1", "r_temp r_light");
                     break;
                 case 'r':
-                    requestResource("temp");
+                    String resourceName = scanner.next();
+                    requestResource(resourceName);
                     break;
                 case 'q':
                     System.exit(0);
@@ -88,7 +89,7 @@ public class Controller implements ICredentialStore {
         }
     }
 
-    public void requestToken(String rsName, String rsScope) throws COSE.CoseException, IOException, AceException
+    public void requestToken(String rsName, String rsScopes) throws COSE.CoseException, IOException, AceException
     {
         if(asPSK == null)
         {
@@ -97,7 +98,7 @@ public class Controller implements ICredentialStore {
         }
 
         Client asClient = new Client(Config.data.get("id"), Config.data.get("AS_IP"), AS_PORT, asPSK, null, null, tokenSent);
-        Map<String, CBORObject> reply = asClient.getAccessToken(rsScope, rsName);
+        Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null) {
             token = reply.get("access_token");
             System.out.println("Token :" + token);

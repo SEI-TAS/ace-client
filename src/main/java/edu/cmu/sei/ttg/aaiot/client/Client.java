@@ -53,11 +53,11 @@ public class Client {
         this.tokenSent = tokenSent;
     }
 
-    public Map<String, CBORObject> getAccessToken(String scope, String audience) throws CoseException, IOException, AceException
+    public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws CoseException, IOException, AceException
     {
         Map<String, CBORObject> params = new HashMap<>();
         params.put("grant_type", Token.clientCredentialsStr);
-        params.put("scope", CBORObject.FromObject(scope));
+        params.put("scope", CBORObject.FromObject(scopes));
         params.put("aud", CBORObject.FromObject(audience));
 
         return sendRequest("token", "post", Constants.abbreviate(params));
