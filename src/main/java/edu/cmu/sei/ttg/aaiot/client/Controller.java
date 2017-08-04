@@ -40,7 +40,7 @@ public class Controller implements ICredentialStore {
         while(true) {
             System.out.println("");
             System.out.println("Choose (p)air, (t)oken request, (r)esource request, or (q)uit: ");
-            char choice = scanner.next().charAt(0);
+            char choice = scanner.nextLine().charAt(0);
 
             switch (choice) {
                 case 'p':
@@ -55,10 +55,13 @@ public class Controller implements ICredentialStore {
                     }
                     break;
                 case 't':
-                    requestToken("rs1", "r_temp r_light");
+                    System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
+                    String scopes = scanner.nextLine();
+                    requestToken(Config.data.get("RS_ID"), scopes);
                     break;
                 case 'r':
-                    String resourceName = scanner.next();
+                    System.out.println("Input the resource name: ");
+                    String resourceName = scanner.nextLine();
                     requestResource(resourceName);
                     break;
                 case 'q':
