@@ -17,7 +17,7 @@ import java.util.Scanner;
  * Created by Sebastian on 2017-07-11.
  */
 public class Controller implements ICredentialStore {
-    private static final String CONFIG_FILE = "src/main/resources/config.json";
+    private static final String CONFIG_FILE = "config.json";
 
     private static final int AS_PORT = 5684;
     private static final int RS_PORT = 5685;
