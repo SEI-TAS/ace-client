@@ -3,7 +3,7 @@ package edu.cmu.sei.ttg.aaiot.client;
 import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
-import edu.cmu.sei.ttg.aaiot.client.cc2531.CC2531Controller;
+//import edu.cmu.sei.ttg.aaiot.client.cc2531.CC2531Controller;
 import edu.cmu.sei.ttg.aaiot.client.pairing.ICredentialStore;
 import edu.cmu.sei.ttg.aaiot.client.pairing.PairingManager;
 import se.sics.ace.AceException;
@@ -31,7 +31,7 @@ public class Controller implements ICredentialStore {
 
     private boolean tokenSent = false;
 
-    public void run() throws COSE.CoseException, IOException, AceException, javax.usb.UsbException
+    public void run() throws COSE.CoseException, IOException, AceException //, javax.usb.UsbException
     {
         Config.load(CONFIG_FILE);
 
@@ -68,7 +68,7 @@ public class Controller implements ICredentialStore {
                     System.exit(0);
                 case 'u':
                     System.out.println("USB test");
-                    CC2531Controller cc2531 = new CC2531Controller();
+                   //CC2531Controller cc2531 = new CC2531Controller();
                     break;
                 default:
                     System.out.println("Invalid command.");
