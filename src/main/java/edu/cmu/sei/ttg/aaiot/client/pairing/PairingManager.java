@@ -16,11 +16,13 @@ public class PairingManager implements IMessageHandler
     private static final String separator = ":";
     private static final int PORT = 9876;
 
+    private String myId;
     private ICredentialStore credentialStore;
     private UDPServer udpServer;
 
-    public PairingManager(ICredentialStore credentialStore)
+    public PairingManager(String myId, ICredentialStore credentialStore)
     {
+        this.myId = myId;
         this.credentialStore = credentialStore;
     }
 
@@ -49,7 +51,7 @@ public class PairingManager implements IMessageHandler
                 credentialStore.storeAS(asId, Base64.getDecoder().decode(psk));
 
                 // Send id
-                String clientId = credentialStore.getId();
+                String clientId = this.myId;
 
                 try {
                     UDPClient udpClient = new UDPClient(sourceIP, sourcePort);

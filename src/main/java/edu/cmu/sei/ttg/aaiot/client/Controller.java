@@ -4,6 +4,7 @@ import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 //import edu.cmu.sei.ttg.aaiot.client.cc2531.CC2531Controller;
+import edu.cmu.sei.ttg.aaiot.client.pairing.FileCredentialStore;
 import edu.cmu.sei.ttg.aaiot.client.pairing.ICredentialStore;
 import edu.cmu.sei.ttg.aaiot.client.pairing.PairingManager;
 import se.sics.ace.AceException;
@@ -16,14 +17,14 @@ import java.util.Scanner;
 /**
  * Created by Sebastian on 2017-07-11.
  */
-public class Controller implements ICredentialStore {
+public class Controller
+{
     private static final String CONFIG_FILE = "config.json";
 
     private static final int AS_PORT = 5684;
     private static final int RS_PORT = 5685;
 
-    private String asId = null;
-    private OneKey asPSK = null;
+    private ICredentialStore credentialStore;
 
     private CBORObject token = null;
     private String kid = null;
@@ -34,6 +35,8 @@ public class Controller implements ICredentialStore {
     public void run() throws COSE.CoseException, IOException, AceException //, javax.usb.UsbException
     {
         Config.load(CONFIG_FILE);
+
+        credentialStore = new FileCredentialStore(Config.data.get("credentials_file"));
 
         Scanner scanner = new Scanner(System.in);
 
@@ -81,7 +84,7 @@ public class Controller implements ICredentialStore {
     {
         try
         {
-            PairingManager pairingManager = new PairingManager(this);
+            PairingManager pairingManager = new PairingManager(Config.data.get("id"), this.credentialStore);
             pairingManager.startPairing();
             return true;
         }
@@ -94,13 +97,14 @@ public class Controller implements ICredentialStore {
 
     public void requestToken(String rsName, String rsScopes) throws COSE.CoseException, IOException, AceException
     {
-        if(asPSK == null)
+        if(credentialStore.getASPSK() == null)
         {
-            System.out.println("edu.cmu.sei.ttg.aaiot.client.Client not paired yet.");
+            System.out.println("Client not paired yet.");
             return;
         }
 
-        Client asClient = new Client(Config.data.get("id"), Config.data.get("AS_IP"), AS_PORT, asPSK, null, null, tokenSent);
+        Client asClient = new Client(Config.data.get("id"), Config.data.get("AS_IP"), AS_PORT, credentialStore.getASPSK(),
+                null, null, tokenSent);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null) {
             token = reply.get("access_token");
@@ -133,38 +137,6 @@ public class Controller implements ICredentialStore {
         rsClient.sendRequest(rsResource, "get", null);
         tokenSent = true;
         rsClient.stop();
-    }
-
-    // Creates a OneKey from raw key data.
-    public OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException
-    {
-        CBORObject keyData = CBORObject.NewMap();
-        keyData.Add(KeyKeys.KeyType.AsCBOR(), KeyKeys.KeyType_Octet);
-        keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(rawKey));
-        OneKey key = new OneKey(keyData);
-        return key;
-    }
-
-    @Override
-    public String getId()
-    {
-        return Config.data.get("id");
-    }
-
-    @Override
-    public boolean storeAS(String asId, byte[] psk)
-    {
-        try
-        {
-            this.asId = asId;
-            this.asPSK = createOneKeyFromBytes(psk);
-            return true;
-        }
-        catch(Exception ex)
-        {
-            System.out.println("Error storing AS key: " + ex.toString());
-            return false;
-        }
     }
 
 }
