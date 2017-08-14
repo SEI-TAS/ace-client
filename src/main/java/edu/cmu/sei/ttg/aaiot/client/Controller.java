@@ -121,7 +121,7 @@ public class Controller
             return;
         }
 
-        Client asClient = new Client(Config.data.get("id"), Config.data.get("AS_IP"), AS_PORT, credentialStore.getASPSK(),
+        Client asClient = new Client(Config.data.get("id"), credentialStore.getASIP().getHostAddress(), AS_PORT, credentialStore.getASPSK(),
                 null, null, tokenSent);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null) {
