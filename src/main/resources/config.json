@@ -1,7 +1,5 @@
 {
   "id" : "clientA",
   "credentials_file": "credentials.json",
-  "AS_IP": "localhost",
-  "RS_IP": "localhost",
-  "RS_ID": "rs1"
+  "AS_IP": "localhost"
 }

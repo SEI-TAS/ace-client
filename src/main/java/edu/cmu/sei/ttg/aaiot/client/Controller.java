@@ -21,6 +21,7 @@ import java.util.Scanner;
 public class Controller
 {
     private static final String CONFIG_FILE = "config.json";
+    private static final String DEFAULT_RS_IP = "localhost";
 
     private static final int AS_PORT = 5684;
     private static final int RS_PORT = 5685;
@@ -59,14 +60,23 @@ public class Controller
                     }
                     break;
                 case 't':
+                    System.out.println("Input the resource server id to request a token for: ");
+                    String rsId = scanner.nextLine();
                     System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
                     String scopes = scanner.nextLine();
-                    requestToken(Config.data.get("RS_ID"), scopes);
+                    requestToken(rsId, scopes);
                     break;
                 case 'r':
+                    System.out.println("Input resource server's IP, or (d) to use default (" + DEFAULT_RS_IP + "): ");
+                    String rsIP = scanner.nextLine();
+                    if (rsIP.equals("d"))
+                    {
+                        rsIP = DEFAULT_RS_IP;
+                    }
+
                     System.out.println("Input the resource name: ");
                     String resourceName = scanner.nextLine();
-                    requestResource(resourceName);
+                    requestResource(rsIP, resourceName);
                     break;
                 case 'q':
                     System.exit(0);
@@ -127,16 +137,19 @@ public class Controller
         asClient.stop();
     }
 
-    public void requestResource(String rsResource) throws COSE.CoseException, IOException, AceException
+    public void requestResource(String rsIP, String rsResource) throws COSE.CoseException, IOException, AceException
     {
         if(rsPSK == null || token == null) {
             System.out.println("Token and POP not obtained yet.");
             return;
         }
 
-        Client rsClient = new Client(Config.data.get("id"), Config.data.get("RS_IP"), RS_PORT, rsPSK, token, kid, tokenSent);
-        rsClient.sendRequest(rsResource, "get", null);
-        tokenSent = true;
+        Client rsClient = new Client(Config.data.get("id"), rsIP, RS_PORT, rsPSK, token, kid, tokenSent);
+        Map<String, CBORObject> response = rsClient.sendRequest(rsResource, "get", null);
+        if(response != null)
+        {
+            tokenSent = true;
+        }
         rsClient.stop();
     }
 
