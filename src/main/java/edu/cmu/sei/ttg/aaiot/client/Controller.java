@@ -43,49 +43,56 @@ public class Controller
         Scanner scanner = new Scanner(System.in);
 
         while(true) {
-            System.out.println("");
-            System.out.println("Choose (p)air, (t)oken request, (r)esource request, or (q)uit: ");
-            char choice = scanner.nextLine().charAt(0);
+            try
+            {
+                System.out.println("");
+                System.out.println("Choose (p)air, (t)oken request, (r)esource request, or (q)uit: ");
+                char choice = scanner.nextLine().charAt(0);
 
-            switch (choice) {
-                case 'p':
-                    boolean success = pair();
-                    if(success)
-                    {
-                        System.out.println("Finished pairing process!");
-                    }
-                    else
-                    {
-                        System.out.println("Pairing aborted.");
-                    }
-                    break;
-                case 't':
-                    System.out.println("Input the resource server id to request a token for: ");
-                    String rsId = scanner.nextLine();
-                    System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
-                    String scopes = scanner.nextLine();
-                    requestToken(rsId, scopes);
-                    break;
-                case 'r':
-                    System.out.println("Input resource server's IP, or (d) to use default (" + DEFAULT_RS_IP + "): ");
-                    String rsIP = scanner.nextLine();
-                    if (rsIP.equals("d"))
-                    {
-                        rsIP = DEFAULT_RS_IP;
-                    }
+                switch (choice)
+                {
+                    case 'p':
+                        boolean success = pair();
+                        if (success)
+                        {
+                            System.out.println("Finished pairing process!");
+                        } else
+                        {
+                            System.out.println("Pairing aborted.");
+                        }
+                        break;
+                    case 't':
+                        System.out.println("Input the resource server id to request a token for: ");
+                        String rsId = scanner.nextLine();
+                        System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
+                        String scopes = scanner.nextLine();
+                        requestToken(rsId, scopes);
+                        break;
+                    case 'r':
+                        System.out.println("Input resource server's IP, or (Enter) to use default (" + DEFAULT_RS_IP + "): ");
+                        String rsIP = scanner.nextLine();
+                        if (rsIP.equals(""))
+                        {
+                            rsIP = DEFAULT_RS_IP;
+                        }
 
-                    System.out.println("Input the resource name: ");
-                    String resourceName = scanner.nextLine();
-                    requestResource(rsIP, resourceName);
-                    break;
-                case 'q':
-                    System.exit(0);
-                case 'u':
-                    System.out.println("USB test");
-                   //CC2531Controller cc2531 = new CC2531Controller();
-                    break;
-                default:
-                    System.out.println("Invalid command.");
+                        System.out.println("Input the resource name: ");
+                        String resourceName = scanner.nextLine();
+                        requestResource(rsIP, resourceName);
+                        break;
+                    case 'q':
+                        System.exit(0);
+                    case 'u':
+                        System.out.println("USB test");
+                        //CC2531Controller cc2531 = new CC2531Controller();
+                        break;
+                    default:
+                        System.out.println("Invalid command.");
+                }
+            }
+            catch(Exception ex)
+            {
+                System.out.println("Error processing command: " + ex.toString());
             }
         }
 
