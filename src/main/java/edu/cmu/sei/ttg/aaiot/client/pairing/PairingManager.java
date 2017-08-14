@@ -1,5 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.client.pairing;
 
+import edu.cmu.sei.ttg.aaiot.credentials.ICredentialStore;
 import edu.cmu.sei.ttg.aaiot.network.IMessageHandler;
 import edu.cmu.sei.ttg.aaiot.network.UDPClient;
 import edu.cmu.sei.ttg.aaiot.network.UDPServer;
