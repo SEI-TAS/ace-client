@@ -3,7 +3,6 @@ package edu.cmu.sei.ttg.aaiot.client;
 import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
-//import edu.cmu.sei.ttg.aaiot.client.cc2531.CC2531Controller;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import edu.cmu.sei.ttg.aaiot.credentials.FileCredentialStore;
 import edu.cmu.sei.ttg.aaiot.credentials.ICredentialStore;
@@ -21,27 +20,27 @@ import java.util.Scanner;
 public class Controller
 {
     private static final String CONFIG_FILE = "config.json";
-    private static final String DEFAULT_RS_IP = "localhost";
 
-    private static final int AS_PORT = 5684;
-    private static final int RS_PORT = 5685;
+    private static final String DEFAULT_RS_IP = "localhost";
+    private static final int DEFAULT_RS_PORT = 5685;
+
+    private static final int DEFAULT_AS_PORT = 5684;
 
     private ICredentialStore credentialStore;
 
     private CBORObject token = null;
-    private String kid = null;
-    private OneKey rsPSK = null;
+    private String popKeyId = null;
+    private OneKey popKeyForRS = null;
 
     private boolean tokenSent = false;
 
-    public void run() throws COSE.CoseException, IOException, AceException //, javax.usb.UsbException
+    public void run() throws COSE.CoseException, IOException, AceException
     {
         Config.load(CONFIG_FILE);
 
         credentialStore = new FileCredentialStore(Config.data.get("credentials_file"));
 
         Scanner scanner = new Scanner(System.in);
-
         while(true) {
             try
             {
@@ -56,13 +55,14 @@ public class Controller
                         if (success)
                         {
                             System.out.println("Finished pairing process!");
-                        } else
+                        }
+                        else
                         {
                             System.out.println("Pairing aborted.");
                         }
                         break;
                     case 't':
-                        System.out.println("Input the resource server id to request a token for: ");
+                        System.out.println("Input the resource audience to request a token for: ");
                         String rsId = scanner.nextLine();
                         System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
                         String scopes = scanner.nextLine();
@@ -75,16 +75,20 @@ public class Controller
                         {
                             rsIP = DEFAULT_RS_IP;
                         }
+                        System.out.println("Input resource server's port, or (Enter) to use default (" + DEFAULT_RS_PORT + "): ");
+                        String rsPort = scanner.nextLine();
+                        int rsPortInt = DEFAULT_RS_PORT;
+                        if (!rsPort.equals(""))
+                        {
+                            rsPortInt = Integer.parseInt(rsPort);
+                        }
 
                         System.out.println("Input the resource name: ");
                         String resourceName = scanner.nextLine();
-                        requestResource(rsIP, resourceName);
+                        requestResource(rsIP, rsPortInt, resourceName);
                         break;
                     case 'q':
                         System.exit(0);
-                    case 'u':
-                        System.out.println("USB test");
-                        //CC2531Controller cc2531 = new CC2531Controller();
                         break;
                     default:
                         System.out.println("Invalid command.");
@@ -95,7 +99,6 @@ public class Controller
                 System.out.println("Error processing command: " + ex.toString());
             }
         }
-
     }
 
     public boolean pair() throws IOException
@@ -121,7 +124,7 @@ public class Controller
             return;
         }
 
-        Client asClient = new Client(Config.data.get("id"), credentialStore.getASIP().getHostAddress(), AS_PORT, credentialStore.getASPSK(),
+        Client asClient = new Client(Config.data.get("id"), credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK(),
                 null, null, tokenSent);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null) {
@@ -130,28 +133,28 @@ public class Controller
             tokenSent = false;
 
             CBORObject popKey = reply.get("cnf");
-            System.out.println("Cnf: " + popKey);
+            System.out.println("Cnf (pop) key: " + popKey);
 
-            CBORObject rsKeyData = popKey.get(Constants.COSE_KEY_CBOR);
-            System.out.println("Cnf key: " + rsKeyData);
+            CBORObject popKeyData = popKey.get(Constants.COSE_KEY_CBOR);
+            System.out.println("Cnf (pop) key data: " + popKeyData);
 
-            CBORObject kidCbor = rsKeyData.get(KeyKeys.KeyId.AsCBOR());
-            kid = new String(kidCbor.GetByteString(), Constants.charset);
-            System.out.println("Cnf key id: " + kid);
+            CBORObject kidCbor = popKeyData.get(KeyKeys.KeyId.AsCBOR());
+            popKeyId = new String(kidCbor.GetByteString(), Constants.charset);
+            System.out.println("Cnf (pop) key id: " + popKeyId);
 
-            rsPSK = new OneKey(rsKeyData);
+            popKeyForRS = new OneKey(popKeyData);
         }
         asClient.stop();
     }
 
-    public void requestResource(String rsIP, String rsResource) throws COSE.CoseException, IOException, AceException
+    public void requestResource(String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
     {
-        if(rsPSK == null || token == null) {
+        if(popKeyForRS == null || token == null) {
             System.out.println("Token and POP not obtained yet.");
             return;
         }
 
-        Client rsClient = new Client(Config.data.get("id"), rsIP, RS_PORT, rsPSK, token, kid, tokenSent);
+        Client rsClient = new Client(Config.data.get("id"), rsIP, port, popKeyForRS, token, popKeyId, tokenSent);
         Map<String, CBORObject> response = rsClient.sendRequest(rsResource, "get", null);
         if(response != null)
         {

@@ -38,18 +38,18 @@ public class Client {
     private CoapClient coapClient;
 
     private CBORObject accessToken;
-    private String kid;
+    private String popKeyId;
 
     private boolean tokenSent = false;
 
-    public Client(String clientId, String serverName, int port, OneKey psk, CBORObject token, String kid, boolean tokenSent) throws COSE.CoseException
+    public Client(String clientId, String serverName, int port, OneKey psk, CBORObject token, String popKeyId, boolean tokenSent) throws COSE.CoseException
     {
         this.clientId = clientId;
         this.serverName = serverName;
         this.serverPort = port;
         this.psk = psk;
         this.accessToken = token;
-        this.kid = kid;
+        this.popKeyId = popKeyId;
         this.tokenSent = tokenSent;
     }
 
@@ -73,7 +73,8 @@ public class Client {
     {
         String uri = "coaps://" + serverName + ":" + serverPort + "/" + endpointName;
 
-        if(accessToken != null){
+        if(accessToken != null)
+        {
             if(!tokenSent)
             {
                 // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
@@ -82,11 +83,12 @@ public class Client {
             else
             {
                 // If the token was previously sent, we need to set the kid.
-                coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), kid, psk);
+                coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), popKeyId, psk);
             }
             coapClient.setURI(uri);
         }
-        else {
+        else
+        {
             // Sets up a standard COAP/DTLS client.
             coapClient = new CoapClient(uri);
             Connector connector = setupDTLSConnector();
@@ -96,7 +98,8 @@ public class Client {
 
         System.out.println("Sending request to server: " + uri);
         CoapResponse response = null;
-        if(method.equals("post")) {
+        if(method.equals("post"))
+        {
             response = coapClient.post(payload.EncodeToBytes(), MediaTypeRegistry.APPLICATION_CBOR);
         }
         else if(method.equals("get"))
@@ -105,7 +108,8 @@ public class Client {
         }
 
         Map<String, CBORObject> map = null;
-        if(response == null) {
+        if(response == null)
+        {
             System.out.println("Server did not respond.");
             return null;
         }
