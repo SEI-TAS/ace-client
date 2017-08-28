@@ -7,6 +7,7 @@ import edu.cmu.sei.ttg.aaiot.config.Config;
 import edu.cmu.sei.ttg.aaiot.credentials.FileCredentialStore;
 import edu.cmu.sei.ttg.aaiot.credentials.ICredentialStore;
 import edu.cmu.sei.ttg.aaiot.client.pairing.PairingManager;
+import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 
@@ -105,8 +106,10 @@ public class Controller
     {
         try
         {
-            PairingManager pairingManager = new PairingManager(Config.data.get("id"), this.credentialStore);
+            byte[] key128 = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+            PairingResource pairingManager = new PairingResource(Config.data.get("id"), key128, "", credentialStore);
             pairingManager.startPairing();
+
             return true;
         }
         catch(Exception ex)
