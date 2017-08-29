@@ -6,7 +6,6 @@ import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import edu.cmu.sei.ttg.aaiot.credentials.FileCredentialStore;
 import edu.cmu.sei.ttg.aaiot.credentials.ICredentialStore;
-import edu.cmu.sei.ttg.aaiot.client.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
@@ -20,6 +19,9 @@ import java.util.Scanner;
  */
 public class Controller
 {
+    private static final String PAIRING_KEY_ID = "pairing";
+    private static final byte[] PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+
     private static final String CONFIG_FILE = "config.json";
 
     private static final String DEFAULT_RS_IP = "localhost";
@@ -106,11 +108,8 @@ public class Controller
     {
         try
         {
-            byte[] key128 = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-            PairingResource pairingManager = new PairingResource(Config.data.get("id"), key128, "", credentialStore);
-            pairingManager.startPairing();
-
-            return true;
+            PairingResource pairingManager = new PairingResource(PAIRING_KEY_ID, PAIRING_KEY, Config.data.get("id"),"", credentialStore);
+            return pairingManager.pair();
         }
         catch(Exception ex)
         {
