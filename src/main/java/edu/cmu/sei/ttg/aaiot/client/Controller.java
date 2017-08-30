@@ -1,19 +1,17 @@
 package edu.cmu.sei.ttg.aaiot.client;
 
-import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.config.Config;
-import edu.cmu.sei.ttg.aaiot.credentials.FileCredentialStore;
-import edu.cmu.sei.ttg.aaiot.credentials.ICredentialStore;
+import edu.cmu.sei.ttg.aaiot.credentials.FileASCredentialStore;
+import edu.cmu.sei.ttg.aaiot.credentials.IASCredentialStore;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
+import edu.cmu.sei.ttg.aaiot.tokens.FileTokenStorage;
+import edu.cmu.sei.ttg.aaiot.tokens.ResourceServer;
 import se.sics.ace.AceException;
-import se.sics.ace.Constants;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -32,17 +30,20 @@ public class Controller
 
     private static final int DEFAULT_AS_PORT = 5684;
 
-    private ICredentialStore credentialStore;
+    private IASCredentialStore credentialStore;
+    private FileTokenStorage tokenStore;
 
     private String clientId;
-    private Map<String, ResourceServer> resourceServers = new HashMap<>();
+    private Map<String, ResourceServer> resourceServers;
 
     public void run() throws COSE.CoseException, IOException, AceException
     {
         Config.load(CONFIG_FILE);
         clientId = Config.data.get("id");
 
-        credentialStore = new FileCredentialStore(Config.data.get("credentials_file"));
+        credentialStore = new FileASCredentialStore(Config.data.get("credentials_file"));
+        tokenStore = new FileTokenStorage();
+        resourceServers = tokenStore.getTokens();
 
         Scanner scanner = new Scanner(System.in);
         while(true) {
@@ -50,8 +51,14 @@ public class Controller
             {
                 System.out.println("");
                 System.out.println("Choose (p)air, (t)oken request, (r)esource request, or (q)uit: ");
-                char choice = scanner.nextLine().charAt(0);
+                String choiceString = scanner.nextLine();
+                if(choiceString == null || choiceString.equals(""))
+                {
+                    System.out.println("No command selected, try again.");
+                    continue;
+                }
 
+                char choice = choiceString.charAt(0);
                 switch (choice)
                 {
                     case 'p':
@@ -134,7 +141,8 @@ public class Controller
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null)
         {
-            resourceServers.put(rsName, new ResourceServer(reply));
+            resourceServers.put(rsName, new ResourceServer(rsName, reply));
+            tokenStore.storeToFile();
         }
         asClient.stop();
     }
@@ -143,12 +151,12 @@ public class Controller
     {
         if(!resourceServers.containsKey(rsName))
         {
-            System.out.println("Token and POP not obtained yet.");
+            System.out.println("Token and POP not obtained yet for " + rsName);
             return;
         }
 
         ResourceServer rs = resourceServers.get(rsName);
-        AceClient rsClient = new AceClient(clientId, rsIP, port, rs.popKey);
+        AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(rs.popKey));
         if(!rs.isTokenSent)
         {
             // Pop key id won't be used, token will be sent.
@@ -156,6 +164,7 @@ public class Controller
             if(response != null)
             {
                 rs.isTokenSent = true;
+                tokenStore.storeToFile();
             }
         }
         else
