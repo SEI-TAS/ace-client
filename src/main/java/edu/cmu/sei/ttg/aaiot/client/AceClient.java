@@ -19,7 +19,6 @@ import java.util.Map;
 public class AceClient extends CoapsPskClient
 {
     private OneKey keyStructure;
-    private String popKeyId;
 
     public AceClient(String clientId, String serverName, int port, OneKey keyStructure)
     {

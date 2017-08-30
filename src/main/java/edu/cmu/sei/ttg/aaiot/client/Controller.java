@@ -10,7 +10,10 @@ import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 
+import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -32,11 +35,7 @@ public class Controller
     private ICredentialStore credentialStore;
 
     private String clientId;
-    private CBORObject token = null;
-    private String popKeyId = null;
-    private OneKey popKeyForRS = null;
-
-    private boolean tokenSent = false;
+    private Map<String, ResourceServer> resourceServers = new HashMap<>();
 
     public void run() throws COSE.CoseException, IOException, AceException
     {
@@ -67,13 +66,16 @@ public class Controller
                         }
                         break;
                     case 't':
-                        System.out.println("Input the resource audience to request a token for: ");
+                        System.out.println("Input the resource audience to request a token for (RS name): ");
                         String rsId = scanner.nextLine();
                         System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
                         String scopes = scanner.nextLine();
                         requestToken(rsId, scopes);
                         break;
                     case 'r':
+                        System.out.println("Input the resource audience to send the request to (RS name): ");
+                        String rsName = scanner.nextLine();
+
                         System.out.println("Input resource server's IP, or (Enter) to use default (" + DEFAULT_RS_IP + "): ");
                         String rsIP = scanner.nextLine();
                         if (rsIP.equals(""))
@@ -90,7 +92,7 @@ public class Controller
 
                         System.out.println("Input the resource name: ");
                         String resourceName = scanner.nextLine();
-                        requestResource(rsIP, rsPortInt, resourceName);
+                        requestResource(rsName, rsIP, rsPortInt, resourceName);
                         break;
                     case 'q':
                         System.exit(0);
@@ -130,49 +132,36 @@ public class Controller
 
         AceClient asClient = new AceClient(clientId, credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK());
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
-        if(reply != null) {
-            token = reply.get("access_token");
-            System.out.println("Token :" + token);
-            tokenSent = false;
-
-            CBORObject popKey = reply.get("cnf");
-            System.out.println("Cnf (pop) key: " + popKey);
-
-            CBORObject popKeyData = popKey.get(Constants.COSE_KEY_CBOR);
-            System.out.println("Cnf (pop) key data: " + popKeyData);
-
-            CBORObject kidCbor = popKeyData.get(KeyKeys.KeyId.AsCBOR());
-            popKeyId = new String(kidCbor.GetByteString(), Constants.charset);
-            System.out.println("Cnf (pop) key id: " + popKeyId);
-
-            popKeyForRS = new OneKey(popKeyData);
+        if(reply != null)
+        {
+            resourceServers.put(rsName, new ResourceServer(reply));
         }
         asClient.stop();
     }
 
-    public void requestResource(String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
+    public void requestResource(String rsName, String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
     {
-        if(popKeyForRS == null || token == null)
+        if(!resourceServers.containsKey(rsName))
         {
             System.out.println("Token and POP not obtained yet.");
             return;
         }
 
-        AceClient rsClient = new AceClient(clientId, rsIP, port, popKeyForRS);
-        CBORObject response = null;
-        if(!tokenSent)
+        ResourceServer rs = resourceServers.get(rsName);
+        AceClient rsClient = new AceClient(clientId, rsIP, port, rs.popKey);
+        if(!rs.isTokenSent)
         {
             // Pop key id won't be used, token will be sent.
-            response = rsClient.sendRequestToRS(rsResource, "get", null, token, popKeyId);
+            CBORObject response = rsClient.sendRequestToRS(rsResource, "get", null, rs.token, rs.popKeyId);
             if(response != null)
             {
-                tokenSent = true;
+                rs.isTokenSent = true;
             }
         }
         else
         {
             // Do not pass token so that only pop key id will be sent.
-            rsClient.sendRequestToRS(rsResource, "get", null, null, popKeyId);
+            rsClient.sendRequestToRS(rsResource, "get", null, null, rs.popKeyId);
         }
 
         rsClient.stop();
