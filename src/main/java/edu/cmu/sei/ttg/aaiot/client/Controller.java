@@ -31,6 +31,7 @@ public class Controller
 
     private ICredentialStore credentialStore;
 
+    private String clientId;
     private CBORObject token = null;
     private String popKeyId = null;
     private OneKey popKeyForRS = null;
@@ -40,6 +41,7 @@ public class Controller
     public void run() throws COSE.CoseException, IOException, AceException
     {
         Config.load(CONFIG_FILE);
+        clientId = Config.data.get("id");
 
         credentialStore = new FileCredentialStore(Config.data.get("credentials_file"));
 
@@ -126,8 +128,7 @@ public class Controller
             return;
         }
 
-        AceClient asClient = new AceClient(Config.data.get("id"), credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK(),
-                null, null, tokenSent);
+        AceClient asClient = new AceClient(clientId, credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK());
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null) {
             token = reply.get("access_token");
@@ -151,17 +152,29 @@ public class Controller
 
     public void requestResource(String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
     {
-        if(popKeyForRS == null || token == null) {
+        if(popKeyForRS == null || token == null)
+        {
             System.out.println("Token and POP not obtained yet.");
             return;
         }
 
-        AceClient rsClient = new AceClient(Config.data.get("id"), rsIP, port, popKeyForRS, token, popKeyId, tokenSent);
-        CBORObject response = rsClient.sendRequest(rsResource, "get", null);
-        if(response != null)
+        AceClient rsClient = new AceClient(clientId, rsIP, port, popKeyForRS);
+        CBORObject response = null;
+        if(!tokenSent)
         {
-            tokenSent = true;
+            // Pop key id won't be used, token will be sent.
+            response = rsClient.sendRequestToRS(rsResource, "get", null, token, popKeyId);
+            if(response != null)
+            {
+                tokenSent = true;
+            }
         }
+        else
+        {
+            // Do not pass token so that only pop key id will be sent.
+            rsClient.sendRequestToRS(rsResource, "get", null, null, popKeyId);
+        }
+
         rsClient.stop();
     }
 

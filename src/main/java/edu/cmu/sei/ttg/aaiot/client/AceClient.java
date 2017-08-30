@@ -20,16 +20,11 @@ public class AceClient extends CoapsPskClient
 {
     private OneKey keyStructure;
     private String popKeyId;
-    private CBORObject accessToken;
-    private boolean sendKeyIdOnly = false;
 
-    public AceClient(String clientId, String serverName, int port, OneKey keyStructure, CBORObject token, String popKeyId, boolean sendKeyIdOnly)
+    public AceClient(String clientId, String serverName, int port, OneKey keyStructure)
     {
         super(serverName, port, clientId, keyStructure.get(KeyKeys.Octet_K).GetByteString());
         this.keyStructure = keyStructure;
-        this.popKeyId = popKeyId;
-        this.accessToken = token;
-        this.sendKeyIdOnly = sendKeyIdOnly;
     }
 
     public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException
@@ -48,30 +43,26 @@ public class AceClient extends CoapsPskClient
         return Constants.unabbreviate(reply);
     }
 
-    public CBORObject postToken()
+    public CBORObject postToken(CBORObject newToken, String popKeyId)
     {
-        return sendRequest("authz-info", "post", accessToken);
+        return sendRequestToRS("authz-info", "post", newToken, null, popKeyId);
     }
 
     // Sends a COAP/DTLS request to the server we are configured to connect to.
-    @Override
-    public CBORObject sendRequest(String resource, String method, CBORObject payload)
+    public CBORObject sendRequestToRS(String resource, String method, CBORObject payload, CBORObject token, String popKeyId)
     {
         // If we have a token, use it. Check if we are posting it the first time or not, to send it or just the id as the psk-identity field in the DTLS handshake.
-        if(accessToken != null)
+        if(token != null)
         {
-            if(!sendKeyIdOnly)
-            {
-                // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
-                coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), accessToken, keyStructure);
-            }
-            else
-            {
-                // If the token was previously sent, we need to set the kid.
-                coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), popKeyId, keyStructure);
-            }
+            // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
+            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), token, keyStructure);
+        }
+        else
+        {
+            // If the token was previously sent, we need to set the kid.
+            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), popKeyId, keyStructure);
         }
 
-        return super.sendRequest(resource, method, payload);
+        return sendRequest(resource, method, payload);
     }
 }
