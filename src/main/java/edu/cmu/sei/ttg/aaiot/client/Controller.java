@@ -126,7 +126,7 @@ public class Controller
             return;
         }
 
-        Client asClient = new Client(Config.data.get("id"), credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK(),
+        AceClient asClient = new AceClient(Config.data.get("id"), credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK(),
                 null, null, tokenSent);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null) {
@@ -156,8 +156,8 @@ public class Controller
             return;
         }
 
-        Client rsClient = new Client(Config.data.get("id"), rsIP, port, popKeyForRS, token, popKeyId, tokenSent);
-        Map<String, CBORObject> response = rsClient.sendRequest(rsResource, "get", null);
+        AceClient rsClient = new AceClient(Config.data.get("id"), rsIP, port, popKeyForRS, token, popKeyId, tokenSent);
+        CBORObject response = rsClient.sendRequest(rsResource, "get", null);
         if(response != null)
         {
             tokenSent = true;
