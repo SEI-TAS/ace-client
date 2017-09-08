@@ -10,7 +10,6 @@ import se.sics.ace.as.Token;
 import se.sics.ace.coap.client.DTLSProfileRequests;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,27 +27,24 @@ public class AceClient extends CoapsPskClient
 
     public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException
     {
-        Map<String, CBORObject> params = new HashMap<>();
-        params.put("grant_type", Token.clientCredentialsStr);
-        params.put("scope", CBORObject.FromObject(scopes));
-        params.put("aud", CBORObject.FromObject(audience));
+        CBORObject params = CBORObject.NewMap();
+        params.Add(Constants.GRANT_TYPE, Token.clientCredentials);
+        params.Add(Constants.SCOPE, CBORObject.FromObject(scopes));
+        params.Add(Constants.AUD, CBORObject.FromObject(audience));
 
-        // Convert all string keys into ints as defined in ACE standard.
-        CBORObject cborParams = Constants.abbreviate(params);
-
-        CBORObject reply = sendRequest("token", "post", cborParams);
+        CBORObject reply = sendRequest("token", "post", params);
 
         // Convert all int keys back into string keys to process them more easily.
         return Constants.unabbreviate(reply);
     }
 
-    public CBORObject postToken(CBORObject newToken, String popKeyId)
+    public CBORObject postToken(CBORObject newToken, byte[] popKeyId)
     {
         return sendRequestToRS("authz-info", "post", newToken, null, popKeyId);
     }
 
     // Sends a COAP/DTLS request to the server we are configured to connect to.
-    public CBORObject sendRequestToRS(String resource, String method, CBORObject payload, CBORObject token, String popKeyId)
+    public CBORObject sendRequestToRS(String resource, String method, CBORObject payload, CBORObject token, byte[] popKeyId)
     {
         // If we have a token, use it. Check if we are posting it the first time or not, to send it or just the id as the psk-identity field in the DTLS handshake.
         if(token != null)
