@@ -10,6 +10,7 @@ import se.sics.ace.as.Token;
 import se.sics.ace.coap.client.DTLSProfileRequests;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -47,11 +48,9 @@ public class AceClient extends CoapsPskClient
     // be from a revoked or an expired token.
     public boolean isTokenActive(CBORObject token) throws AceException
     {
-        Map<String, CBORObject> params = new HashMap<>();
-        params.put("token", token);
-        CBORObject cborParams = Constants.abbreviate(params);
-
-        CBORObject reply = sendRequest("introspect", "post", cborParams);
+        CBORObject params = CBORObject.NewMap();
+        params.Add(Constants.TOKEN, token);
+        CBORObject reply = sendRequest("introspect", "post", params);
 
         Map<String, CBORObject> mapReply = Constants.unabbreviate(reply);
         boolean isActive = mapReply.get("active").AsBoolean();
