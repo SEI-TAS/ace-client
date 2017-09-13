@@ -8,7 +8,9 @@ import edu.cmu.sei.ttg.aaiot.credentials.IASCredentialStore;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import edu.cmu.sei.ttg.aaiot.tokens.FileTokenStorage;
 import edu.cmu.sei.ttg.aaiot.tokens.ResourceServer;
+import edu.cmu.sei.ttg.aaiot.tokens.RevokedTokenChecker;
 import se.sics.ace.AceException;
+import se.sics.ace.rs.TokenRepository;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -44,6 +46,9 @@ public class Controller
         credentialStore = new FileASCredentialStore(Config.data.get("credentials_file"));
         tokenStore = new FileTokenStorage();
         resourceServers = tokenStore.getTokens();
+
+        RevokedTokenChecker checker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
+        checker.startChecking();
 
         Scanner scanner = new Scanner(System.in);
         while(true) {
