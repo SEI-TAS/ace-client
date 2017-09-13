@@ -13,7 +13,6 @@ import se.sics.ace.AceException;
 import se.sics.ace.rs.TokenRepository;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -161,6 +160,18 @@ public class Controller
         }
 
         ResourceServer rs = resourceServers.get(rsName);
+
+        // Check if token is still valid.
+        // TODO: change this to a separate thread that does this and removes resouce servers with expired tokens.
+        //AceClient asClient = new AceClient(clientId, credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, credentialStore.getASPSK());
+        //boolean isTokenActive = asClient.isTokenActive(rs.token);
+        //asClient.stop();
+        //if(!isTokenActive)
+        //{
+        //    System.out.println("Current token for " + rs.rsId + " is no longer valid, a new token is required.");
+        //    return;
+        //}
+
         AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(rs.popKey));
         if(!rs.isTokenSent)
         {
