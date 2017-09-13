@@ -44,19 +44,6 @@ public class AceClient extends CoapsPskClient
         return sendRequestToRS("authz-info", "post", newToken, null, popKeyId);
     }
 
-    // Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
-    // be from a revoked or an expired token.
-    public boolean isTokenActive(CBORObject token) throws AceException
-    {
-        CBORObject params = CBORObject.NewMap();
-        params.Add(Constants.TOKEN, token);
-        CBORObject reply = sendRequest("introspect", "post", params);
-
-        Map<String, CBORObject> mapReply = Constants.unabbreviate(reply);
-        boolean isActive = mapReply.get("active").AsBoolean();
-        return isActive;
-    }
-
     // Sends a COAP/DTLS request to the server we are configured to connect to.
     public CBORObject sendRequestToRS(String resource, String method, CBORObject payload, CBORObject token, byte[] popKeyId)
     {
