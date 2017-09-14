@@ -4,13 +4,13 @@ import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
+import org.eclipse.californium.core.CoapClient;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 import se.sics.ace.as.Token;
 import se.sics.ace.coap.client.DTLSProfileRequests;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,24 +39,25 @@ public class AceClient extends CoapsPskClient
         return Constants.unabbreviate(reply);
     }
 
-    public CBORObject postToken(CBORObject newToken, byte[] popKeyId)
+    // Posts a token over a non-DTLS secured channel.
+    public CBORObject postToken(CBORObject newToken)
     {
-        return sendRequestToRS("authz-info", "post", newToken, null, popKeyId);
+        return sendRequestToRS("authz-info", "post", newToken, null);
     }
 
     // Sends a COAP/DTLS request to the server we are configured to connect to.
-    public CBORObject sendRequestToRS(String resource, String method, CBORObject payload, CBORObject token, byte[] popKeyId)
+    public CBORObject sendRequestToRS(String resource, String method, CBORObject payload, byte[] popKeyId)
     {
-        // If we have a token, use it. Check if we are posting it the first time or not, to send it or just the id as the psk-identity field in the DTLS handshake.
-        if(token != null)
+        if(popKeyId != null)
         {
-            // Gets a special client that can send the token as its identity in a request for a RS. Complies with ACE DTLS profile.
-            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), token, keyStructure);
+            // If the token with a PSK was previously sent, we need to set the kid.
+            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), popKeyId, keyStructure);
         }
         else
         {
-            // If the token was previously sent, we need to set the kid.
-            coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), popKeyId, keyStructure);
+            // If the token has not been sent, we need a non-DTLS connection.
+            coapClient = new CoapClient();
+            useDTLS = false;
         }
 
         return sendRequest(resource, method, payload);
