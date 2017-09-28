@@ -10,7 +10,6 @@ import edu.cmu.sei.ttg.aaiot.tokens.FileTokenStorage;
 import edu.cmu.sei.ttg.aaiot.tokens.ResourceServer;
 import edu.cmu.sei.ttg.aaiot.tokens.RevokedTokenChecker;
 import se.sics.ace.AceException;
-import se.sics.ace.rs.TokenRepository;
 
 import java.io.IOException;
 import java.util.Map;
@@ -28,26 +27,44 @@ public class Controller
 
     private static final String DEFAULT_RS_IP = "localhost";
     private static final int DEFAULT_RS_PORT = 5685;
+    private static final int RS_COAP_PORT = 5690;
 
     private static final int DEFAULT_AS_PORT = 5684;
 
     private IASCredentialStore credentialStore;
     private FileTokenStorage tokenStore;
+    private RevokedTokenChecker tokenChecker;
 
     private String clientId;
     private Map<String, ResourceServer> resourceServers;
 
     public void run() throws COSE.CoseException, IOException, AceException
     {
-        Config.load(CONFIG_FILE);
+        try
+        {
+            Config.load(CONFIG_FILE);
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Error loading config file: " + ex.toString());
+            return;
+        }
+
         clientId = Config.data.get("id");
 
         credentialStore = new FileASCredentialStore(Config.data.get("credentials_file"));
         tokenStore = new FileTokenStorage();
         resourceServers = tokenStore.getTokens();
 
-        RevokedTokenChecker checker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
-        checker.startChecking();
+        try
+        {
+            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
+            tokenChecker.startChecking();
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Can't start revoked token checker, no credentials available.");
+        }
 
         Scanner scanner = new Scanner(System.in);
         while(true) {
@@ -115,6 +132,7 @@ public class Controller
             catch(Exception ex)
             {
                 System.out.println("Error processing command: " + ex.toString());
+                ex.printStackTrace();
             }
         }
     }
@@ -124,7 +142,18 @@ public class Controller
         try
         {
             PairingResource pairingManager = new PairingResource(PAIRING_KEY_ID, PAIRING_KEY, Config.data.get("id"),"", credentialStore);
-            return pairingManager.pair();
+            boolean success = pairingManager.pair();
+            if(success)
+            {
+                // Restart token checker, since info may have changed.
+                if(tokenChecker != null)
+                {
+                    tokenChecker.stopChecking();
+                }
+                tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
+                tokenChecker.startChecking();
+            }
+            return success;
         }
         catch(Exception ex)
         {
@@ -160,23 +189,22 @@ public class Controller
         }
 
         ResourceServer rs = resourceServers.get(rsName);
-        AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(rs.popKey));
         if(!rs.isTokenSent)
         {
-            // Pop key id won't be used, token will be sent.
-            CBORObject response = rsClient.sendRequestToRS(rsResource, "get", null, rs.token, rs.popKeyId);
+            // First post token, if it has not be sent before.
+            AceClient rsClient = new AceClient(clientId, rsIP, RS_COAP_PORT, new OneKey(rs.popKey));
+            CBORObject response = rsClient.postToken(rs.token);
             if(response != null)
             {
                 rs.isTokenSent = true;
                 tokenStore.storeToFile();
             }
-        }
-        else
-        {
-            // Do not pass token so that only pop key id will be sent.
-            rsClient.sendRequestToRS(rsResource, "get", null, null, rs.popKeyId);
+            rsClient.stop();
         }
 
+        // Send a request for the resource.
+        AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(rs.popKey));
+        rsClient.sendRequestToRS(rsResource, "get", null, rs.popKeyId);
         rsClient.stop();
     }
 

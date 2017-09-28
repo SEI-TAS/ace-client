@@ -10,5 +10,7 @@
 .gradle/
 ns3source/
 out/
+*.DS_Store/
 /.DS_Store
+/classes
 credentials.json
