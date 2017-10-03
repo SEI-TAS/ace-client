@@ -20,7 +20,6 @@ import java.util.Scanner;
  */
 public class Controller
 {
-    private static final String PAIRING_KEY_ID = "pairing";
     private static final byte[] PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
     private static final String CONFIG_FILE = "config.json";
@@ -56,22 +55,12 @@ public class Controller
         tokenStore = new FileTokenStorage();
         resourceServers = tokenStore.getTokens();
 
-        try
-        {
-            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
-            tokenChecker.startChecking();
-        }
-        catch(Exception ex)
-        {
-            System.out.println("Can't start revoked token checker, no credentials available.");
-        }
-
         Scanner scanner = new Scanner(System.in);
         while(true) {
             try
             {
                 System.out.println("");
-                System.out.println("Choose (p)air, (t)oken request, (r)esource request, or (q)uit: ");
+                System.out.println("Choose (p)air, (t)oken request, (r)esource request, (v) start/stop revoked tokens check, or (q)uit: ");
                 String choiceString = scanner.nextLine();
                 if(choiceString == null || choiceString.equals(""))
                 {
@@ -122,6 +111,9 @@ public class Controller
                         String resourceName = scanner.nextLine();
                         requestResource(rsName, rsIP, rsPortInt, resourceName);
                         break;
+                    case 'v':
+                        toggleRevocationChecker();
+                        break;
                     case 'q':
                         System.exit(0);
                         break;
@@ -141,17 +133,16 @@ public class Controller
     {
         try
         {
-            PairingResource pairingManager = new PairingResource(PAIRING_KEY_ID, PAIRING_KEY, Config.data.get("id"),"", credentialStore);
+            PairingResource pairingManager = new PairingResource(PAIRING_KEY, Config.data.get("id"),"", credentialStore);
             boolean success = pairingManager.pair();
             if(success)
             {
                 // Restart token checker, since info may have changed.
                 if(tokenChecker != null)
                 {
-                    tokenChecker.stopChecking();
+                    stopRevocationChecker();
+                    startRevocationChecker();
                 }
-                tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
-                tokenChecker.startChecking();
             }
             return success;
         }
@@ -206,6 +197,40 @@ public class Controller
         AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(rs.popKey));
         rsClient.sendRequestToRS(rsResource, "get", null, rs.popKeyId);
         rsClient.stop();
+    }
+
+    private void toggleRevocationChecker()
+    {
+        if(tokenChecker == null)
+        {
+            startRevocationChecker();
+        }
+        else
+        {
+            stopRevocationChecker();
+        }
+    }
+
+    private void stopRevocationChecker()
+    {
+        if (tokenChecker != null)
+        {
+            tokenChecker.stopChecking();
+            tokenChecker = null;
+        }
+    }
+
+    private void startRevocationChecker()
+    {
+        try
+        {
+            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
+            tokenChecker.startChecking();
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Can't start revoked token checker, no credentials available.");
+        }
     }
 
 }
