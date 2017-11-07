@@ -133,8 +133,8 @@ public class Controller
     {
         try
         {
-            PairingResource pairingManager = new PairingResource(PAIRING_KEY, Config.data.get("id"),"", credentialStore);
-            boolean success = pairingManager.pair();
+            PairingResource pairingResource = new PairingResource(PAIRING_KEY, Config.data.get("id"),"", credentialStore);
+            boolean success = pairingResource.pair();
             if(success)
             {
                 // Restart token checker, since info may have changed.
