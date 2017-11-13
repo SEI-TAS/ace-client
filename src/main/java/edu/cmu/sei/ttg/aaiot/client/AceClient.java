@@ -35,8 +35,15 @@ public class AceClient extends CoapsPskClient
 
         CBORObject reply = sendRequest("token", "post", params);
 
-        // Convert all int keys back into string keys to process them more easily.
-        return Constants.unabbreviate(reply);
+        if(reply != null)
+        {
+            // Convert all int keys back into string keys to process them more easily.
+            return Constants.unabbreviate(reply);
+        }
+        else
+        {
+            throw new AceException("No token received, most likely due to permission issues.");
+        }
     }
 
     // Posts a token over a non-DTLS secured channel.

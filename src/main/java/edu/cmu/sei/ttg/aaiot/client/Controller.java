@@ -203,10 +203,12 @@ public class Controller
     {
         if(tokenChecker == null)
         {
+            System.out.println("Starting revocation checker");
             startRevocationChecker();
         }
         else
         {
+            System.out.println("Stopping revocation checker");
             stopRevocationChecker();
         }
     }
