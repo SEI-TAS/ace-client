@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+
+<TabPane xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"
+         fx:controller="edu.cmu.sei.ttg.aaiot.client.gui.controllers.MainController"
+         fx:id="tabPane"
+         prefHeight="400.0" prefWidth="1000.0">
+    <tabs>
+        <Tab text="Paired ASs" closable="false">
+            <content>
+                <fx:include fx:id="assTabPage" source="ASList.fxml"/>
+            </content>
+        </Tab>
+        <Tab text="Tokens" closable="false" fx:id="tokensTab">
+            <content>
+                <fx:include fx:id="tokensTabPage" source="Tokens.fxml"/>
+            </content>
+        </Tab>
+    </tabs>
+</TabPane>
