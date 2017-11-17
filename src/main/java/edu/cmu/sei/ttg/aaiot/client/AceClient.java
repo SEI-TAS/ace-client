@@ -10,6 +10,7 @@ import se.sics.ace.Constants;
 import se.sics.ace.as.Token;
 import se.sics.ace.coap.client.DTLSProfileRequests;
 
+import javax.naming.NoPermissionException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class AceClient extends CoapsPskClient
         this.keyStructure = keyStructure;
     }
 
-    public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException
+    public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException, NoPermissionException
     {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.GRANT_TYPE, Token.clientCredentials);
@@ -42,7 +43,7 @@ public class AceClient extends CoapsPskClient
         }
         else
         {
-            throw new AceException("No token received, most likely due to permission issues.");
+            throw new NoPermissionException("No token received, most likely due to permission issues.");
         }
     }
 
