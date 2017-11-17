@@ -11,6 +11,7 @@ import edu.cmu.sei.ttg.aaiot.tokens.ResourceServer;
 import edu.cmu.sei.ttg.aaiot.tokens.RevokedTokenChecker;
 import se.sics.ace.AceException;
 
+import javax.naming.NoPermissionException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -119,7 +120,7 @@ public class Manager
      * @throws IOException
      * @throws AceException
      */
-    public boolean requestToken(String rsName, String rsScopes) throws COSE.CoseException, IOException, AceException
+    public boolean requestToken(String rsName, String rsScopes) throws COSE.CoseException, IOException, AceException, NoPermissionException
     {
         if(credentialStore.getASPSK() == null)
         {
@@ -202,7 +203,7 @@ public class Manager
     /**
      * Stops the revocation thread.
      */
-    private void stopRevocationChecker()
+    public void stopRevocationChecker()
     {
         if (tokenChecker != null)
         {
@@ -214,7 +215,7 @@ public class Manager
     /**
      * Starts the revocation thread.
      */
-    private boolean startRevocationChecker()
+    public boolean startRevocationChecker()
     {
         try
         {
