@@ -7,6 +7,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
 
+import java.util.Map;
+
 /**
  * Created by sebastianecheverria on 11/17/17.
  */
@@ -24,6 +26,7 @@ public class RevokedTokensController
         try
         {
             Manager.getInstance().startRevocationChecker();
+            fillTable();
         }
         catch (Exception e)
         {
@@ -37,9 +40,26 @@ public class RevokedTokensController
      * Updates the data in the table with the current data.
      * @throws Exception
      */
-    public void addRevokedToken(Token token)
+    public void fillTable()
     {
-        ObservableList<Token> tokensTableData = revokedTokensTableView.getItems();
-        tokensTableData.add(token);
+        try
+        {
+            ObservableList<Token> tokensTableData = revokedTokensTableView.getItems();
+            tokensTableData.clear();
+            Map<String, String> revokedTokens = Manager.getInstance().getRevokedTokens();
+            if (revokedTokens != null)
+            {
+                for (String tokenId : revokedTokens.keySet())
+                {
+                    String rsId = revokedTokens.get(tokenId);
+                    tokensTableData.add(new Token(tokenId, rsId));
+                }
+            }
+        }
+        catch(Exception e)
+        {
+            System.out.println("Error updating revoked token data: " + e.toString());
+        }
     }
+
 }

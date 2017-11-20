@@ -7,6 +7,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 
+<?import javafx.scene.control.Button?>
 <GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
           fx:controller="edu.cmu.sei.ttg.aaiot.client.gui.controllers.RevokedTokensController"
           alignment="TOP_LEFT" hgap="10" vgap="10">
@@ -14,7 +15,8 @@
     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
 </padding>
 <Label text="Tokens revoked during this session" GridPane.columnIndex="0" GridPane.rowIndex="0"></Label>
-<TableView fx:id="revokedTokensTableView" GridPane.columnIndex="0" GridPane.rowIndex="1"
+<Button text="Refresh" onAction="#fillTable" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+<TableView fx:id="revokedTokensTableView" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"
            GridPane.vgrow="ALWAYS">
     <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
     <columns>

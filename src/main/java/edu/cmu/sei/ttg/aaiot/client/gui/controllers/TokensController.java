@@ -2,7 +2,7 @@ package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
 import edu.cmu.sei.ttg.aaiot.client.Manager;
 import edu.cmu.sei.ttg.aaiot.client.gui.models.Token;
-import edu.cmu.sei.ttg.aaiot.tokens.ResourceServer;
+import edu.cmu.sei.ttg.aaiot.tokens.TokenInfo;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -47,13 +47,13 @@ public class TokensController
     {
         ObservableList<Token> tokensTableData = tokensTableView.getItems();
         tokensTableData.clear();
-        Map<String, ResourceServer> tokens = Manager.getInstance().getTokenStore().getTokens();
+        Map<String, TokenInfo> tokens = Manager.getInstance().getTokenStore().getTokens();
         if(tokens != null)
         {
             for (String rsId : tokens.keySet())
             {
-                ResourceServer resourceServer = tokens.get(rsId);
-                String tokenKeyIdString = resourceServer.getPopKeyIdAsString();
+                TokenInfo tokenInfo = tokens.get(rsId);
+                String tokenKeyIdString = tokenInfo.getTokenId();
                 tokensTableData.add(new Token(tokenKeyIdString, rsId));
             }
         }

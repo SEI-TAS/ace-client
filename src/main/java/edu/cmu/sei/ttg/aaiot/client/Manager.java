@@ -7,18 +7,20 @@ import edu.cmu.sei.ttg.aaiot.credentials.FileASCredentialStore;
 import edu.cmu.sei.ttg.aaiot.credentials.IASCredentialStore;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import edu.cmu.sei.ttg.aaiot.tokens.FileTokenStorage;
-import edu.cmu.sei.ttg.aaiot.tokens.ResourceServer;
+import edu.cmu.sei.ttg.aaiot.tokens.IRemovedTokenTracker;
+import edu.cmu.sei.ttg.aaiot.tokens.TokenInfo;
 import edu.cmu.sei.ttg.aaiot.tokens.RevokedTokenChecker;
 import se.sics.ace.AceException;
 
 import javax.naming.NoPermissionException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by Sebastian on 2017-07-11.
  */
-public class Manager
+public class Manager implements IRemovedTokenTracker
 {
     private static final byte[] PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
@@ -35,7 +37,8 @@ public class Manager
     private RevokedTokenChecker tokenChecker;
 
     private String clientId;
-    private Map<String, ResourceServer> resourceServers;
+    private Map<String, TokenInfo> resourceServers;
+    private Map<String, String> revokedTokens;
 
     // Singleton.
     private static Manager manager = null;
@@ -63,6 +66,7 @@ public class Manager
         credentialStore = new FileASCredentialStore(Config.data.get("credentials_file"));
         tokenStore = new FileTokenStorage();
         resourceServers = tokenStore.getTokens();
+        revokedTokens = new HashMap<>();
     }
 
     /**
@@ -132,7 +136,7 @@ public class Manager
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null)
         {
-            resourceServers.put(rsName, new ResourceServer(rsName, reply));
+            resourceServers.put(rsName, new TokenInfo(rsName, reply));
             tokenStore.storeToFile();
         }
         asClient.stop();
@@ -160,23 +164,23 @@ public class Manager
         }
 
         // Check if we have sent an access token already.
-        ResourceServer rs = resourceServers.get(rsName);
-        if(!rs.isTokenSent)
+        TokenInfo tokenInfo = resourceServers.get(rsName);
+        if(!tokenInfo.isTokenSent)
         {
             // Post the token.
-            AceClient rsClient = new AceClient(clientId, rsIP, RS_COAP_PORT, new OneKey(rs.popKey));
-            CBORObject response = rsClient.postToken(rs.token);
+            AceClient rsClient = new AceClient(clientId, rsIP, RS_COAP_PORT, new OneKey(tokenInfo.popKey));
+            CBORObject response = rsClient.postToken(tokenInfo.token);
             if(response != null)
             {
-                rs.isTokenSent = true;
+                tokenInfo.isTokenSent = true;
                 tokenStore.storeToFile();
             }
             rsClient.stop();
         }
 
         // Send a request for the resource.
-        AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(rs.popKey));
-        rsClient.sendRequestToRS(rsResource, "get", null, rs.popKeyId);
+        AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(tokenInfo.popKey));
+        rsClient.sendRequestToRS(rsResource, "get", null, tokenInfo.popKeyId);
         rsClient.stop();
 
         return true;
@@ -219,7 +223,7 @@ public class Manager
     {
         try
         {
-            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), AS_COAP_PORT, clientId, credentialStore.getRawASPSK(), tokenStore);
+            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), AS_COAP_PORT, clientId, credentialStore.getRawASPSK(), this, tokenStore);
             tokenChecker.startChecking();
             return true;
         }
@@ -238,5 +242,16 @@ public class Manager
     public FileTokenStorage getTokenStore()
     {
         return tokenStore;
+    }
+
+    @Override
+    public void notifyRemovedToken(String tokenId, String rsId)
+    {
+        revokedTokens.put(tokenId, rsId);
+    }
+
+    public Map<String, String> getRevokedTokens()
+    {
+        return revokedTokens;
     }
 }
