@@ -24,5 +24,10 @@
                 <fx:include fx:id="revokedTokensTabPage" source="RevokedTokens.fxml"/>
             </content>
         </Tab>
+        <Tab text="Resources" closable="false" fx:id="resourcesTab">
+            <content>
+                <fx:include fx:id="resourcesTabPage" source="Resources.fxml"/>
+            </content>
+        </Tab>
     </tabs>
 </TabPane>

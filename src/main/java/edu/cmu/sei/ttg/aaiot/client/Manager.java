@@ -155,12 +155,12 @@ public class Manager implements IRemovedTokenTracker
      * @throws IOException
      * @throws AceException
      */
-    public boolean requestResource(String rsName, String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
+    public String requestResource(String rsName, String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
     {
         if(!resourceServers.containsKey(rsName))
         {
             System.out.println("Token and POP not obtained yet for " + rsName);
-            return false;
+            throw new IllegalArgumentException("Token and POP not obtained yet for " + rsName);
         }
 
         // Check if we have sent an access token already.
@@ -180,10 +180,10 @@ public class Manager implements IRemovedTokenTracker
 
         // Send a request for the resource.
         AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(tokenInfo.popKey));
-        rsClient.sendRequestToRS(rsResource, "get", null, tokenInfo.popKeyId);
+        CBORObject result = rsClient.sendRequestToRS(rsResource, "get", null, tokenInfo.popKeyId);
         rsClient.stop();
 
-        return true;
+        return result.toString();
     }
 
     /**

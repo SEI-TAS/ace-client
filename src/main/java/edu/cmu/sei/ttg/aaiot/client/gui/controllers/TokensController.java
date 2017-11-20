@@ -70,6 +70,7 @@ public class TokensController
         try
         {
             Manager.getInstance().requestToken(deviceId, scopes);
+            new Alert(Alert.AlertType.INFORMATION, "New token obtained!").showAndWait();
             fillTable();
         }
         catch(NoPermissionException e)
