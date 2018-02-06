@@ -94,7 +94,9 @@ public class Manager implements IRemovedTokenTracker
     {
         try
         {
+            System.out.println("Creating pairing resource.");
             PairingResource pairingResource = new PairingResource(PAIRING_KEY, clientId,"", credentialStore);
+            System.out.println("Starting pairing resource.");
             boolean success = pairingResource.pair();
             if(success)
             {

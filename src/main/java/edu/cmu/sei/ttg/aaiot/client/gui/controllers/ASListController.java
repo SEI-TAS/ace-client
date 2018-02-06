@@ -59,6 +59,7 @@ public class ASListController
      */
     public void enablePairing()
     {
+        System.out.println("Enabling pairing thread.");
         new TaskThread(() -> startPairingThread()).start();
     }
 
@@ -67,6 +68,7 @@ public class ASListController
      */
     private void startPairingThread()
     {
+        System.out.println("Starting pairing thread.");
         try
         {
             pairingButton.setDisable(true);

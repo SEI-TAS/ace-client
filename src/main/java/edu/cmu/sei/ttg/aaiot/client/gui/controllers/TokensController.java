@@ -69,9 +69,16 @@ public class TokensController
 
         try
         {
-            Manager.getInstance().requestToken(deviceId, scopes);
-            new Alert(Alert.AlertType.INFORMATION, "New token obtained!").showAndWait();
-            fillTable();
+            boolean success = Manager.getInstance().requestToken(deviceId, scopes);
+            if(success)
+            {
+                new Alert(Alert.AlertType.INFORMATION, "New token obtained!").showAndWait();
+                fillTable();
+            }
+            else
+            {
+                new Alert(Alert.AlertType.WARNING, "Could not obtain token.").showAndWait();
+            }
         }
         catch(NoPermissionException e)
         {
