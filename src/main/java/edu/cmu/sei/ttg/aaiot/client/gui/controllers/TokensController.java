@@ -88,7 +88,7 @@ public class TokensController
         catch(Exception e)
         {
             System.out.println("Error requesting token: " + e.toString());
-            e.printStackTrace();
+            //e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Error requesting token: " + e.toString()).showAndWait();
         }
     }
