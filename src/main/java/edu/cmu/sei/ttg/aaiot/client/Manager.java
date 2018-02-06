@@ -24,13 +24,12 @@ public class Manager implements IRemovedTokenTracker
 {
     private static final byte[] PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
-    private static final String CONFIG_FILE = "config.json";
+    private static final String CONFIG_FILE = "./config.json";
 
     public static final String DEFAULT_RS_IP = "localhost";
     public static final int DEFAULT_RS_PORT = 5685;
 
     private static final int AS_COAP_PORT = 5684;
-    private static final int RS_COAP_PORT = 5690;
 
     private IASCredentialStore credentialStore;
     private FileTokenStorage tokenStore;
@@ -58,7 +57,7 @@ public class Manager implements IRemovedTokenTracker
         catch(Exception ex)
         {
             System.out.println("Error loading config file: " + ex.toString());
-            return;
+            throw new RuntimeException("Error loading config file: " + ex.toString());
         }
 
         clientId = Config.data.get("id");
@@ -168,7 +167,9 @@ public class Manager implements IRemovedTokenTracker
         if(!tokenInfo.isTokenSent)
         {
             // Post the token.
-            AceClient rsClient = new AceClient(clientId, rsIP, RS_COAP_PORT, new OneKey(tokenInfo.popKey));
+            System.out.println("Posting token.");
+            int rsNonDTLSPort = Integer.parseInt(Config.data.get("rs_non_dtls_port"));
+            AceClient rsClient = new AceClient(clientId, rsIP, rsNonDTLSPort, new OneKey(tokenInfo.popKey));
             CBORObject response = rsClient.postToken(tokenInfo.token);
             if(response != null)
             {
@@ -177,11 +178,18 @@ public class Manager implements IRemovedTokenTracker
             }
             rsClient.stop();
         }
+        else
+        {
+            System.out.println("Token already posted.");
+        }
 
         // Send a request for the resource.
         AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(tokenInfo.popKey));
         CBORObject result = rsClient.sendRequestToRS(rsResource, "get", null, tokenInfo.popKeyId);
         rsClient.stop();
+
+        if(result == null)
+            throw new RuntimeException("Resource server did not reply or stopped the connection.");
 
         return result.toString();
     }

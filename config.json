@@ -1,0 +1,5 @@
+{
+  "id" : "clientA",
+  "credentials_file": "credentials.json",
+  "rs_non_dtls_port": "5690"
+}

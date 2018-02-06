@@ -1,3 +1,7 @@
 Manifest-Version: 1.0
-Main-Class: edu.cmu.sei.ttg.aaiot.client.commandline.CommandLineApplication
+Class-Path: libs/ace-0.0.1-SNAPSHOT.jar libs/json-20160810.jar libs/bcprov-jdk15on-1.54.jar
+ libs/californium-core-1.0.5.jar libs/org.wso2.balana-1.0.1.jar libs/cose-java-0.9.6.jar libs/postgresql-9
+ .3-1104-jdbc4.jar bcpkix-jdk15on-1.54.jar libs/commons-logging-1.1.1.jar libs/element-connector-1.0.5.jar libs/scandium-1.0.5.jar com
+ mons-lang3-3.2.1.jar libs/cbor-2.4.1.jar libs/aaiot-lib-0.0.1-SNAPSHOT.jar libs/mysql-connector-java-5.1.30.jar libs/numbers-0.3.0.jar
+Main-Class: edu.cmu.sei.ttg.aaiot.client.gui.FXApplication
 
