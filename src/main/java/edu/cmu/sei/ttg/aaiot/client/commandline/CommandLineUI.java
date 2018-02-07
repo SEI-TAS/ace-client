@@ -68,9 +68,9 @@ public class CommandLineUI
                         {
                             rsIP = Manager.DEFAULT_RS_IP;
                         }
-                        System.out.println("Input resource server's port, or (Enter) to use default (" + Manager.DEFAULT_RS_PORT + "): ");
+                        System.out.println("Input resource server's port, or (Enter) to use default (" + Manager.DEFAULT_RS_COAPS_PORT + "): ");
                         String rsPort = scanner.nextLine();
-                        int rsPortInt = Manager.DEFAULT_RS_PORT;
+                        int rsPortInt = Manager.DEFAULT_RS_COAPS_PORT;
                         if (!rsPort.equals(""))
                         {
                             rsPortInt = Integer.parseInt(rsPort);
@@ -78,7 +78,7 @@ public class CommandLineUI
 
                         System.out.println("Input the resource name: ");
                         String resourceName = scanner.nextLine();
-                        manager.requestResource(rsName, rsIP, rsPortInt, resourceName);
+                        manager.requestResource(rsName, rsIP, rsPortInt, Manager.DEFAULT_RS_COAP_PORT, resourceName);
                         break;
                     case 'v':
                         manager.toggleRevocationChecker();

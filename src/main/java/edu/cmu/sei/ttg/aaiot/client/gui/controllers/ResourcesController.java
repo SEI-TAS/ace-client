@@ -14,7 +14,8 @@ public class ResourcesController
     @FXML private TextField deviceIdTextField;
     @FXML private TextField resourceTextField;
     @FXML private TextField deviceIpTextField;
-    @FXML private TextField devicePortTextField;
+    @FXML private TextField deviceCoapPortTextField;
+    @FXML private TextField deviceCoapsPortTextField;
     @FXML private TextArea resultsTextArea;
 
     /**
@@ -24,7 +25,8 @@ public class ResourcesController
     {
         // Default IP and port.
         deviceIpTextField.setText(Manager.DEFAULT_RS_IP);
-        devicePortTextField.setText(String.valueOf(Manager.DEFAULT_RS_PORT));
+        deviceCoapPortTextField.setText(String.valueOf(Manager.DEFAULT_RS_COAP_PORT));
+        deviceCoapsPortTextField.setText(String.valueOf(Manager.DEFAULT_RS_COAPS_PORT));
     }
 
     /**
@@ -34,9 +36,10 @@ public class ResourcesController
     {
         try
         {
-            int port = Integer.parseInt(devicePortTextField.getText());
-            String result = Manager.getInstance().requestResource(deviceIdTextField.getText(), deviceIpTextField.getText(), port,
-                            resourceTextField.getText());
+            int resourcePort = Integer.parseInt(deviceCoapsPortTextField.getText());
+            int authPort = Integer.parseInt(deviceCoapPortTextField.getText());
+            String result = Manager.getInstance().requestResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
+                    resourcePort, authPort, resourceTextField.getText());
             resultsTextArea.setText(result);
         }
         catch (Exception e)

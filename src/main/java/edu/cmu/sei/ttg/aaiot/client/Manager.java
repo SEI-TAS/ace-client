@@ -27,7 +27,8 @@ public class Manager implements IRemovedTokenTracker
     private static final String CONFIG_FILE = "./config.json";
 
     public static final String DEFAULT_RS_IP = "localhost";
-    public static final int DEFAULT_RS_PORT = 5685;
+    public static final int DEFAULT_RS_COAP_PORT = 5690;
+    public static final int DEFAULT_RS_COAPS_PORT = 5685;
 
     private static final int AS_COAP_PORT = 5684;
 
@@ -156,7 +157,7 @@ public class Manager implements IRemovedTokenTracker
      * @throws IOException
      * @throws AceException
      */
-    public String requestResource(String rsName, String rsIP, int port, String rsResource) throws COSE.CoseException, IOException, AceException
+    public String requestResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource) throws COSE.CoseException, IOException, AceException
     {
         if(!resourceServers.containsKey(rsName))
         {
@@ -170,8 +171,7 @@ public class Manager implements IRemovedTokenTracker
         {
             // Post the token.
             System.out.println("Posting token.");
-            int rsNonDTLSPort = Integer.parseInt(Config.data.get("rs_non_dtls_port"));
-            AceClient rsClient = new AceClient(clientId, rsIP, rsNonDTLSPort, new OneKey(tokenInfo.popKey));
+            AceClient rsClient = new AceClient(clientId, rsIP, authPort, new OneKey(tokenInfo.popKey));
             CBORObject response = rsClient.postToken(tokenInfo.token);
             if(response != null)
             {
@@ -186,7 +186,7 @@ public class Manager implements IRemovedTokenTracker
         }
 
         // Send a request for the resource.
-        AceClient rsClient = new AceClient(clientId, rsIP, port, new OneKey(tokenInfo.popKey));
+        AceClient rsClient = new AceClient(clientId, rsIP, resourcePort, new OneKey(tokenInfo.popKey));
         CBORObject result = rsClient.sendRequestToRS(rsResource, "get", null, tokenInfo.popKeyId);
         rsClient.stop();
 
