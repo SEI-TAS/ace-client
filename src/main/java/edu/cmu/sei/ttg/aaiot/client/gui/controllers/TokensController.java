@@ -1,6 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
-import edu.cmu.sei.ttg.aaiot.client.Manager;
+import edu.cmu.sei.ttg.aaiot.client.AceClient;
 import edu.cmu.sei.ttg.aaiot.client.gui.models.Token;
 import edu.cmu.sei.ttg.aaiot.tokens.TokenInfo;
 import javafx.collections.ObservableList;
@@ -47,7 +47,7 @@ public class TokensController
     {
         ObservableList<Token> tokensTableData = tokensTableView.getItems();
         tokensTableData.clear();
-        Map<String, TokenInfo> tokens = Manager.getInstance().getTokenStore().getTokens();
+        Map<String, TokenInfo> tokens = AceClient.getInstance().getTokenStore().getTokens();
         if(tokens != null)
         {
             for (String rsId : tokens.keySet())
@@ -69,7 +69,7 @@ public class TokensController
 
         try
         {
-            boolean success = Manager.getInstance().requestToken(deviceId, scopes);
+            boolean success = AceClient.getInstance().requestToken(deviceId, scopes);
             if(success)
             {
                 new Alert(Alert.AlertType.INFORMATION, "New token obtained!").showAndWait();

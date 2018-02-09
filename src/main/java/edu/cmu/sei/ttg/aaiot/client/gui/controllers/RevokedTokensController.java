@@ -1,6 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
-import edu.cmu.sei.ttg.aaiot.client.Manager;
+import edu.cmu.sei.ttg.aaiot.client.AceClient;
 import edu.cmu.sei.ttg.aaiot.client.gui.models.Token;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -25,7 +25,7 @@ public class RevokedTokensController
     {
         try
         {
-            Manager.getInstance().startRevocationChecker();
+            AceClient.getInstance().startRevocationChecker();
             fillTable();
         }
         catch (Exception e)
@@ -46,7 +46,7 @@ public class RevokedTokensController
         {
             ObservableList<Token> tokensTableData = revokedTokensTableView.getItems();
             tokensTableData.clear();
-            Map<String, String> revokedTokens = Manager.getInstance().getRevokedTokens();
+            Map<String, String> revokedTokens = AceClient.getInstance().getRevokedTokens();
             if (revokedTokens != null)
             {
                 for (String tokenId : revokedTokens.keySet())

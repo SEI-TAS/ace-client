@@ -1,6 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
-import edu.cmu.sei.ttg.aaiot.client.Manager;
+import edu.cmu.sei.ttg.aaiot.client.AceClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
@@ -24,9 +24,9 @@ public class ResourcesController
     public void initialize()
     {
         // Default IP and port.
-        deviceIpTextField.setText(Manager.DEFAULT_RS_IP);
-        deviceCoapPortTextField.setText(String.valueOf(Manager.DEFAULT_RS_COAP_PORT));
-        deviceCoapsPortTextField.setText(String.valueOf(Manager.DEFAULT_RS_COAPS_PORT));
+        deviceIpTextField.setText(AceClient.DEFAULT_RS_IP);
+        deviceCoapPortTextField.setText(String.valueOf(AceClient.DEFAULT_RS_COAP_PORT));
+        deviceCoapsPortTextField.setText(String.valueOf(AceClient.DEFAULT_RS_COAPS_PORT));
     }
 
     /**
@@ -38,7 +38,7 @@ public class ResourcesController
         {
             int resourcePort = Integer.parseInt(deviceCoapsPortTextField.getText());
             int authPort = Integer.parseInt(deviceCoapPortTextField.getText());
-            String result = Manager.getInstance().requestResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
+            String result = AceClient.getInstance().requestResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
                     resourcePort, authPort, resourceTextField.getText());
             resultsTextArea.setText(result);
         }

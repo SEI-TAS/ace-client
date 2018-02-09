@@ -1,6 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
-import edu.cmu.sei.ttg.aaiot.client.Manager;
+import edu.cmu.sei.ttg.aaiot.client.AceClient;
 import edu.cmu.sei.ttg.aaiot.client.gui.models.AuthorizationServer;
 import edu.cmu.sei.ttg.aaiot.threads.TaskThread;
 import javafx.application.Platform;
@@ -46,8 +46,8 @@ public class ASListController
     {
         ObservableList<AuthorizationServer> tableData = asTableView.getItems();
         tableData.clear();
-        String ASId = Manager.getInstance().getCredentialStore().getASid();
-        InetAddress ipAddress = Manager.getInstance().getCredentialStore().getASIP();
+        String ASId = AceClient.getInstance().getCredentialStore().getASid();
+        InetAddress ipAddress = AceClient.getInstance().getCredentialStore().getASIP();
         if(ipAddress != null)
         {
             tableData.add(new AuthorizationServer(ASId, ipAddress.getHostAddress()));
@@ -72,7 +72,7 @@ public class ASListController
         try
         {
             pairingButton.setDisable(true);
-            Manager.getInstance().enableAndWaitForPairing();
+            AceClient.getInstance().enableAndWaitForPairing();
             fillASTable();
         }
         catch (Exception e)

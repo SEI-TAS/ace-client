@@ -1,6 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.client.commandline;
 
-import edu.cmu.sei.ttg.aaiot.client.Manager;
+import edu.cmu.sei.ttg.aaiot.client.AceClient;
 
 import java.util.Scanner;
 
@@ -11,10 +11,10 @@ public class CommandLineUI
 {
     public void run()
     {
-        Manager manager;
+        AceClient manager;
         try
         {
-            manager = Manager.getInstance();
+            manager = AceClient.getInstance();
         }
         catch(Exception e)
         {
@@ -62,15 +62,15 @@ public class CommandLineUI
                         System.out.println("Input the resource audience to send the request to (RS name): ");
                         String rsName = scanner.nextLine();
 
-                        System.out.println("Input resource server's IP, or (Enter) to use default (" + Manager.DEFAULT_RS_IP + "): ");
+                        System.out.println("Input resource server's IP, or (Enter) to use default (" + AceClient.DEFAULT_RS_IP + "): ");
                         String rsIP = scanner.nextLine();
                         if (rsIP.equals(""))
                         {
-                            rsIP = Manager.DEFAULT_RS_IP;
+                            rsIP = AceClient.DEFAULT_RS_IP;
                         }
-                        System.out.println("Input resource server's port, or (Enter) to use default (" + Manager.DEFAULT_RS_COAPS_PORT + "): ");
+                        System.out.println("Input resource server's port, or (Enter) to use default (" + AceClient.DEFAULT_RS_COAPS_PORT + "): ");
                         String rsPort = scanner.nextLine();
-                        int rsPortInt = Manager.DEFAULT_RS_COAPS_PORT;
+                        int rsPortInt = AceClient.DEFAULT_RS_COAPS_PORT;
                         if (!rsPort.equals(""))
                         {
                             rsPortInt = Integer.parseInt(rsPort);
@@ -78,7 +78,7 @@ public class CommandLineUI
 
                         System.out.println("Input the resource name: ");
                         String resourceName = scanner.nextLine();
-                        manager.requestResource(rsName, rsIP, rsPortInt, Manager.DEFAULT_RS_COAP_PORT, resourceName);
+                        manager.requestResource(rsName, rsIP, rsPortInt, AceClient.DEFAULT_RS_COAP_PORT, resourceName);
                         break;
                     case 'v':
                         manager.toggleRevocationChecker();
