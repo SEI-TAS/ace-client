@@ -53,16 +53,23 @@ public class AceClient implements IRemovedTokenTracker
     // Static key used for pairing with an AS.
     private static final byte[] PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
+    private static final byte[] TEST_CLIENT1_KEY = {0x61, 0x62, 0x63, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+    private static final byte[] TEST_CLIENT2_KEY = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+    private static final byte[] TEST_CLIENT4_KEY = {0x51, 0x52, 0x53, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+
     // Config file used to load configurations.
     private static final String CONFIG_FILE = "./config.json";
 
     // Default connection info for RS.
     public static final String DEFAULT_RS_IP = "localhost";
-    public static final int DEFAULT_RS_COAP_PORT = 5690;
-    public static final int DEFAULT_RS_COAPS_PORT = 5685;
+    public static final int DEFAULT_RS_COAP_PORT = 5683;
+    public static final int DEFAULT_RS_COAPS_PORT = 5687;
 
     // Default COAPS port, used for AS.
-    private static final int DEFAULT_COAPS_PORT = 5684;
+    private static final int AS_COAP_PORT = 5684;
 
     // Stores AS credentials.
     private IASCredentialStore credentialStore;
@@ -109,6 +116,9 @@ public class AceClient implements IRemovedTokenTracker
         tokenStore = new FileTokenStorage();
         resourceServers = tokenStore.getTokens();
         revokedTokens = new HashMap<>();
+
+        // TODO: For testing purposes only:
+        //credentialStore.storeAS("AS", TEST_CLIENT4_KEY, InetAddress.getByName("127.0.0.1"));
     }
 
     /**
@@ -177,7 +187,7 @@ public class AceClient implements IRemovedTokenTracker
         }
 
         byte[] keyBytes = credentialStore.getASPSK().get(KeyKeys.Octet_K).GetByteString();
-        AceCoapClient asClient = new AceCoapClient(credentialStore.getASIP().getHostAddress(), DEFAULT_COAPS_PORT, clientId, keyBytes);
+        AceCoapClient asClient = new AceCoapClient(credentialStore.getASIP().getHostAddress(), AS_COAP_PORT, clientId, keyBytes);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null)
         {
@@ -282,7 +292,8 @@ public class AceClient implements IRemovedTokenTracker
     {
         try
         {
-            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_COAPS_PORT, clientId, credentialStore.getRawASPSK(), this, tokenStore);
+            // TODO: disable for tests
+            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_COAPS_PORT, clientId, credentialStore.getRawASPSK(), this, tokenStore);
             tokenChecker.startChecking();
             return true;
         }

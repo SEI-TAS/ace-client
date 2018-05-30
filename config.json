@@ -1,4 +1,4 @@
 {
-  "id" : "clientA",
-  "credentials_file": "credentials.json"
+  "id" : "client1",
+  "credentials_file": "credentials_client1.json"
 }
