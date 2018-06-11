@@ -96,6 +96,7 @@ public class ResourcesController
             {
                 cborPayload = CBORObject.FromObject(payload);
             }
+            resultsTextArea.setText("");
 
             String result = AceClient.getInstance().putResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
                     resourcePort, authPort, resourceTextField.getText(), cborPayload);
