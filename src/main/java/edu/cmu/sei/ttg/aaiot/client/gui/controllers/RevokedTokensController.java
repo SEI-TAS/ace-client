@@ -32,6 +32,7 @@ import edu.cmu.sei.ttg.aaiot.client.gui.models.Token;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 
 import java.util.Map;
@@ -41,8 +42,8 @@ import java.util.Map;
  */
 public class RevokedTokensController
 {
-    @FXML
-    private TableView<Token> revokedTokensTableView;
+    @FXML private TableView<Token> revokedTokensTableView;
+    @FXML private Button revocationCheckToggleButton;
 
     /**
      * Sets up the view.
@@ -52,7 +53,6 @@ public class RevokedTokensController
     {
         try
         {
-            AceClient.getInstance().startRevocationChecker();
             fillTable();
         }
         catch (Exception e)
@@ -65,7 +65,6 @@ public class RevokedTokensController
 
     /**
      * Updates the data in the table with the current data.
-     * @throws Exception
      */
     public void fillTable()
     {
@@ -86,6 +85,30 @@ public class RevokedTokensController
         catch(Exception e)
         {
             System.out.println("Error updating revoked token data: " + e.toString());
+        }
+    }
+
+    /**
+     * Toggles revocation checker on or off.
+     */
+    public void toggleCheck()
+    {
+        try
+        {
+            AceClient.getInstance().toggleRevocationChecker();
+            boolean isChecking = AceClient.getInstance().isCheckingForRevokedTokens();
+            String buttonText = "Enable Check";
+            if(isChecking)
+            {
+                buttonText = "Disable Check";
+            }
+            revocationCheckToggleButton.setText(buttonText);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error toggling revocation check: " + e.toString());
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error toggling revocation check: " + e.toString()).showAndWait();
         }
     }
 

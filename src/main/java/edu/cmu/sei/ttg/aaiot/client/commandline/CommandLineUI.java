@@ -83,7 +83,7 @@ public class CommandLineUI
                         String rsId = scanner.nextLine();
                         System.out.println("Input the resource scope(s) to request a token for, separated by space: ");
                         String scopes = scanner.nextLine();
-                        manager.requestToken(rsId, scopes);
+                        manager.requestToken(rsId, scopes, "127.0.0.1", AceClient.DEFAULT_AS_COAPS_PORT);
                         break;
                     case 'r':
                         System.out.println("Input the resource audience to send the request to (RS name): ");

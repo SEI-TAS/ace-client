@@ -41,6 +41,8 @@ import se.sics.ace.AceException;
 
 import javax.naming.NoPermissionException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +71,7 @@ public class AceClient implements IRemovedTokenTracker
     public static final int DEFAULT_RS_COAPS_PORT = 5687;
 
     // Default COAPS port, used for AS.
-    private static final int AS_COAPS_PORT = 5684;
+    public static final int DEFAULT_AS_COAPS_PORT = 5684;
 
     // Stores AS credentials.
     private IASCredentialStore credentialStore;
@@ -153,12 +155,11 @@ public class AceClient implements IRemovedTokenTracker
             boolean success = pairingResource.pair();
             if(success)
             {
-                // Restart token checker, since info may have changed.
+                // Stop token checker, since info may have changed.
                 if(tokenChecker != null)
                 {
                     stopRevocationChecker();
                 }
-                startRevocationChecker();
             }
             return success;
         }
@@ -178,7 +179,8 @@ public class AceClient implements IRemovedTokenTracker
      * @throws IOException
      * @throws AceException
      */
-    public boolean requestToken(String rsName, String rsScopes) throws COSE.CoseException, IOException, AceException, NoPermissionException
+    public boolean requestToken(String rsName, String rsScopes, String asIp, int port)
+            throws AceException, NoPermissionException, UnknownHostException
     {
         if(credentialStore.getASPSK() == null)
         {
@@ -187,7 +189,7 @@ public class AceClient implements IRemovedTokenTracker
         }
 
         byte[] keyBytes = credentialStore.getASPSK().get(KeyKeys.Octet_K).GetByteString();
-        AceCoapClient asClient = new AceCoapClient(credentialStore.getASIP().getHostAddress(), AS_COAPS_PORT, clientId, keyBytes);
+        AceCoapClient asClient = new AceCoapClient(InetAddress.getByName(asIp).getHostAddress(), port, clientId, keyBytes);
         Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
         if(reply != null)
         {
@@ -285,6 +287,11 @@ public class AceClient implements IRemovedTokenTracker
         }
     }
 
+    public boolean isCheckingForRevokedTokens()
+    {
+        return tokenChecker != null;
+    }
+
     /**
      * Starts the revocation thread.
      */
@@ -292,14 +299,14 @@ public class AceClient implements IRemovedTokenTracker
     {
         try
         {
-            // TODO: disable for tests
-            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), AS_COAPS_PORT, clientId, credentialStore.getRawASPSK(), this, tokenStore);
+            tokenChecker = new RevokedTokenChecker(credentialStore.getASIP().getHostAddress(), DEFAULT_AS_COAPS_PORT, clientId, credentialStore.getRawASPSK(), this, tokenStore);
             tokenChecker.startChecking();
             return true;
         }
         catch(Exception ex)
         {
             System.out.println("Can't start revoked token checker, no credentials available.");
+            tokenChecker = null;
             return false;
         }
     }

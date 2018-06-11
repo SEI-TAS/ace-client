@@ -47,6 +47,8 @@ public class TokensController
     @FXML private TableView<Token> tokensTableView;
     @FXML private TextField deviceIdTextField;
     @FXML private TextField scopesTextField;
+    @FXML private TextField asIpTextField;
+    @FXML private TextField asCoapsPortTextField;
 
     /**
      * Sets up the view.
@@ -56,6 +58,10 @@ public class TokensController
     {
         try
         {
+            // Default IP and port.
+            asIpTextField.setText(AceClient.getInstance().getCredentialStore().getASIP().getHostAddress());
+            asCoapsPortTextField.setText(String.valueOf(AceClient.DEFAULT_AS_COAPS_PORT));
+
             fillTable();
         }
         catch (Exception e)
@@ -93,10 +99,12 @@ public class TokensController
     {
         String deviceId = deviceIdTextField.getText();
         String scopes = scopesTextField.getText();
+        String asIp = asIpTextField.getText();
+        int port = Integer.parseInt(asCoapsPortTextField.getText());
 
         try
         {
-            boolean success = AceClient.getInstance().requestToken(deviceId, scopes);
+            boolean success = AceClient.getInstance().requestToken(deviceId, scopes, asIp, port);
             if(success)
             {
                 new Alert(Alert.AlertType.INFORMATION, "New token obtained!").showAndWait();

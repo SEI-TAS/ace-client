@@ -20,8 +20,15 @@
     <TextField fx:id="deviceIdTextField" GridPane.columnIndex="0" GridPane.rowIndex="1"></TextField>
     <Label text="Scope(s)" GridPane.columnIndex="1" GridPane.rowIndex="0"></Label>
     <TextField fx:id="scopesTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"></TextField>
+
+    <Label text="AS IP" GridPane.columnIndex="0" GridPane.rowIndex="2"></Label>
+    <TextField fx:id="asIpTextField" GridPane.columnIndex="0" GridPane.rowIndex="3"></TextField>
+    <Label text="AS COAPS Port" GridPane.columnIndex="1" GridPane.rowIndex="2"></Label>
+    <TextField fx:id="asCoapsPortTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"></TextField>
+
     <Button text="Request Token" onAction="#requestToken" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-    <TableView fx:id="tokensTableView" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="3"
+
+    <TableView fx:id="tokensTableView" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="3"
                GridPane.vgrow="ALWAYS">
         <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
         <columns>
