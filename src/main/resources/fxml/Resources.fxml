@@ -5,8 +5,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Button?>
-
 <?import javafx.scene.control.TextArea?>
+
 <GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
           fx:controller="edu.cmu.sei.ttg.aaiot.client.gui.controllers.ResourcesController"
           alignment="TOP_LEFT" hgap="10" vgap="10">
@@ -21,11 +21,12 @@
     <TextField fx:id="deviceIpTextField" GridPane.columnIndex="0" GridPane.rowIndex="3"></TextField>
     <Label text="IoT Device COAP Port" GridPane.columnIndex="1" GridPane.rowIndex="2"></Label>
     <TextField fx:id="deviceCoapPortTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"></TextField>
-    <Label text="IoT Device COAPS Port" GridPane.columnIndex="2" GridPane.rowIndex="2"></Label>
-    <TextField fx:id="deviceCoapsPortTextField" GridPane.columnIndex="2" GridPane.rowIndex="3"></TextField>
+    <Label text="IoT Device COAPS Port" GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.columnSpan="2"></Label>
+    <TextField fx:id="deviceCoapsPortTextField" GridPane.columnIndex="2" GridPane.rowIndex="3" GridPane.columnSpan="2"></TextField>
 
     <Button text="Get Resource" onAction="#requestResource" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="2"/>
+    <Button text="Put Resource" onAction="#putResource" GridPane.columnIndex="3" GridPane.rowIndex="0" GridPane.rowSpan="2"/>
 
-    <Label text="Results" GridPane.columnIndex="0" GridPane.rowIndex="4"></Label>
-    <TextArea fx:id="resultsTextArea" disable="false" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="3"></TextArea>
+    <Label text="Results\Payload" GridPane.columnIndex="0" GridPane.rowIndex="4"></Label>
+    <TextArea fx:id="resultsTextArea" disable="false" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="4"></TextArea>
 </GridPane>

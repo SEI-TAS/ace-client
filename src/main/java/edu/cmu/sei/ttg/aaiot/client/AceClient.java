@@ -98,9 +98,8 @@ public class AceClient implements IRemovedTokenTracker
      * Constructor, private for singleton.
      * @throws COSE.CoseException
      * @throws IOException
-     * @throws AceException
      */
-    private AceClient() throws COSE.CoseException, IOException, AceException
+    private AceClient() throws COSE.CoseException, IOException
     {
         try
         {
@@ -128,9 +127,8 @@ public class AceClient implements IRemovedTokenTracker
      * @return
      * @throws COSE.CoseException
      * @throws IOException
-     * @throws AceException
      */
-    public static AceClient getInstance() throws COSE.CoseException, IOException, AceException
+    public static AceClient getInstance() throws COSE.CoseException, IOException
     {
         if(aceClient == null)
         {
@@ -143,9 +141,8 @@ public class AceClient implements IRemovedTokenTracker
     /**
      * Enables paring to be started by AS.
      * @return
-     * @throws IOException
      */
-    public boolean enableAndWaitForPairing() throws IOException
+    public boolean enableAndWaitForPairing()
     {
         try
         {
@@ -175,8 +172,6 @@ public class AceClient implements IRemovedTokenTracker
      * @param rsName
      * @param rsScopes
      * @return
-     * @throws COSE.CoseException
-     * @throws IOException
      * @throws AceException
      */
     public boolean requestToken(String rsName, String rsScopes, String asIp, int port)
@@ -202,6 +197,22 @@ public class AceClient implements IRemovedTokenTracker
     }
 
     /**
+     * Puts a resource using PUT.
+     */
+    public String putResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource, CBORObject payload) throws COSE.CoseException
+    {
+        return accessResource("put", rsName, rsIP, resourcePort, authPort, rsResource, payload);
+    }
+
+    /**
+     * Requests a resource using GET.
+     */
+    public String requestResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource) throws COSE.CoseException
+    {
+        return accessResource("get", rsName, rsIP, resourcePort, authPort, rsResource, null);
+    }
+
+    /**
      * Request a resource and update state.
      * @param rsName
      * @param rsIP
@@ -209,10 +220,9 @@ public class AceClient implements IRemovedTokenTracker
      * @param rsResource
      * @return
      * @throws COSE.CoseException
-     * @throws IOException
-     * @throws AceException
      */
-    public String requestResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource) throws COSE.CoseException, IOException, AceException
+    public String accessResource(String method, String rsName, String rsIP, int resourcePort, int authPort, String rsResource, CBORObject payload)
+            throws COSE.CoseException
     {
         if(!resourceServers.containsKey(rsName))
         {
@@ -246,7 +256,8 @@ public class AceClient implements IRemovedTokenTracker
         String popKeyId = Base64.getEncoder().encodeToString(kidCbor.EncodeToBytes());
         byte[] popKeyBytes = tokenInfo.popKey.get(KeyKeys.Octet_K.AsCBOR()).GetByteString();
         AceCoapClient rsClient = new AceCoapClient(rsIP, resourcePort, popKeyId, popKeyBytes);
-        CBORObject result = rsClient.requestResource(rsResource, "get", null);
+
+        CBORObject result = rsClient.requestResource(rsResource, method, payload);
         rsClient.stop();
 
         if(result == null)

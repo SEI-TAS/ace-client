@@ -27,6 +27,7 @@ DM18-0702
 
 package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
+import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.client.AceClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -74,5 +75,37 @@ public class ResourcesController
             System.out.println("Error requesting resource: " + e.toString());
             new Alert(Alert.AlertType.ERROR, "Error requesting resource: " + e.getMessage()).showAndWait();
         }
+    }
+
+    public void putResource()
+    {
+        try
+        {
+            int resourcePort = Integer.parseInt(deviceCoapsPortTextField.getText());
+            int authPort = Integer.parseInt(deviceCoapPortTextField.getText());
+
+            // Payload will be obtained from Results area. It can either be a string, or if it is a valid boolean,
+            // it will be turned into one.
+            String payload = resultsTextArea.getText();
+            CBORObject cborPayload;
+            if(payload.equals("true") || payload.equals("false"))
+            {
+                cborPayload = CBORObject.FromObject(Boolean.parseBoolean(payload));
+            }
+            else
+            {
+                cborPayload = CBORObject.FromObject(payload);
+            }
+
+            String result = AceClient.getInstance().putResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
+                    resourcePort, authPort, resourceTextField.getText(), cborPayload);
+            resultsTextArea.setText(result);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error requesting resource: " + e.toString());
+            new Alert(Alert.AlertType.ERROR, "Error requesting resource: " + e.getMessage()).showAndWait();
+        }
+
     }
 }

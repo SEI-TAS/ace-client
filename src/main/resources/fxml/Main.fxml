@@ -7,7 +7,7 @@
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="edu.cmu.sei.ttg.aaiot.client.gui.controllers.MainController"
          fx:id="tabPane"
-         prefHeight="400.0" prefWidth="1000.0">
+         prefHeight="600.0" prefWidth="1500.0">
     <tabs>
         <Tab text="Paired ASs" closable="false">
             <content>

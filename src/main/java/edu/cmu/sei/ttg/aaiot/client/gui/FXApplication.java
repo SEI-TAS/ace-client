@@ -48,7 +48,7 @@ public class FXApplication extends Application
     {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/Main.fxml"));
 
-        Scene scene = new Scene(root, 500, 300);
+        Scene scene = new Scene(root, 700, 300);
         primaryStage.setTitle("ACE Client");
         primaryStage.setOnCloseRequest(e -> System.exit(0));
         primaryStage.setScene(scene);
