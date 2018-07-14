@@ -237,13 +237,22 @@ public class AceClient implements IRemovedTokenTracker
             // Post the token.
             System.out.println("Posting token.");
             AceCoapClient rsClient = new AceCoapClient(rsIP, authPort, null, null);
-            CBORObject response = rsClient.postToken(tokenInfo.token);
-            if(response != null)
+            try
             {
+                CBORObject response = rsClient.postToken(tokenInfo.token);
                 tokenInfo.isTokenSent = true;
                 tokenStore.storeToFile();
             }
-            rsClient.stop();
+            catch(RuntimeException ex)
+            {
+                // Exception means server didn't answered or answered with an error.
+                System.out.println("Could not post token");
+                throw ex;
+            }
+            finally
+            {
+                rsClient.stop();
+            }
         }
         else
         {

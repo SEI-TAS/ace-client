@@ -84,7 +84,7 @@ public class AceCoapClient extends CoapsPskClient
      * @param newToken The token to be posted.
      * @return
      */
-    public CBORObject postToken(CBORObject newToken) throws COSE.CoseException
+    public CBORObject postToken(CBORObject newToken)
     {
         // Do the actual sending of the COAP(s) request.
         CBORObject reply = sendRequest("authz-info", "post", newToken);
