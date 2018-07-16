@@ -239,7 +239,10 @@ public class AceClient implements IRemovedTokenTracker
             AceCoapClient rsClient = new AceCoapClient(rsIP, authPort, null, null);
             try
             {
-                CBORObject response = rsClient.postToken(tokenInfo.token);
+                // Remove the byte string header from the token.
+                CBORObject tokenAsCose = CBORObject.DecodeFromBytes(tokenInfo.token.GetByteString());
+                System.out.println("Sending token of type " + tokenAsCose.getType() + ", contents " + tokenAsCose.toString());
+                CBORObject response = rsClient.postToken(tokenAsCose);
                 tokenInfo.isTokenSent = true;
                 tokenStore.storeToFile();
             }
