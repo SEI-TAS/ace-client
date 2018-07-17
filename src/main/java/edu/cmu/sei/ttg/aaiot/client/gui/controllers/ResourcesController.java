@@ -77,6 +77,9 @@ public class ResourcesController
         }
     }
 
+    /**
+     * Put a value to a remote resource.
+     */
     public void putResource()
     {
         try
@@ -104,7 +107,7 @@ public class ResourcesController
         }
         catch (Exception e)
         {
-            System.out.println("Error requesting resource: " + e.toString());
+            System.out.println("Error putting resource: " + e.toString());
             new Alert(Alert.AlertType.ERROR, "Error requesting resource: " + e.getMessage()).showAndWait();
         }
 

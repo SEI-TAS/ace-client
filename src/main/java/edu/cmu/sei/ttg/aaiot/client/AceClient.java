@@ -274,7 +274,8 @@ public class AceClient implements IRemovedTokenTracker
 
         if(result == null)
         {
-            throw new RuntimeException("Resource server did not reply or stopped the connection.");
+            System.out.println("Payload was in unknown format.");
+            return "Payload was in unknown format.";
         }
 
         return result.toString();
