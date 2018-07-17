@@ -30,6 +30,7 @@ package edu.cmu.sei.ttg.aaiot.client;
 import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
@@ -60,7 +61,7 @@ public class AceCoapClient extends CoapsPskClient
      * @throws AceException
      * @throws NoPermissionException
      */
-    public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException, NoPermissionException
+    public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException, NoPermissionException, CoapException
     {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.GRANT_TYPE, Token.clientCredentials);
@@ -84,7 +85,7 @@ public class AceCoapClient extends CoapsPskClient
      * @param newToken The token to be posted.
      * @return
      */
-    public CBORObject postToken(CBORObject newToken)
+    public CBORObject postToken(CBORObject newToken) throws CoapException
     {
         // Do the actual sending of the COAP(s) request.
         CBORObject reply = sendRequest("authz-info", "post", newToken);
@@ -105,7 +106,7 @@ public class AceCoapClient extends CoapsPskClient
      * @param payload Any payload to be sent with the request (post requests).
      * @return
      */
-    public CBORObject requestResource(String resource, String method, CBORObject payload) throws COSE.CoseException
+    public CBORObject requestResource(String resource, String method, CBORObject payload) throws COSE.CoseException, CoapException
     {
         // Key ID is needed in bytes by helper method.
         CBORObject keyCbor = CBORObject.DecodeFromBytes(Base64.getDecoder().decode(keyId));

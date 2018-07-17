@@ -29,6 +29,7 @@ package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.client.AceClient;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
@@ -70,6 +71,13 @@ public class ResourcesController
                     resourcePort, authPort, resourceTextField.getText());
             resultsTextArea.setText(result);
         }
+        catch(CoapException ex)
+        {
+            String errorMessage = "Resource could not be obtained; server reported error " + ex.getErrorCode() + ": " +
+                    ex.getErrorName() + ". " + ex.getErrorDescription();
+            System.out.println(errorMessage);
+            new Alert(Alert.AlertType.WARNING, errorMessage).showAndWait();
+        }
         catch (Exception e)
         {
             System.out.println("Error requesting resource: " + e.toString());
@@ -104,6 +112,13 @@ public class ResourcesController
             String result = AceClient.getInstance().putResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
                     resourcePort, authPort, resourceTextField.getText(), cborPayload);
             resultsTextArea.setText(result);
+        }
+        catch(CoapException ex)
+        {
+            String errorMessage = "Resource could not be put; server reported error " + ex.getErrorCode() + ": " +
+            ex.getErrorName() + ". " + ex.getErrorDescription();
+            System.out.println(errorMessage);
+            new Alert(Alert.AlertType.WARNING, errorMessage).showAndWait();
         }
         catch (Exception e)
         {

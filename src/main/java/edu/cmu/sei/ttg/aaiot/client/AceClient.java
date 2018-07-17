@@ -32,6 +32,7 @@ import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import edu.cmu.sei.ttg.aaiot.credentials.FileASCredentialStore;
 import edu.cmu.sei.ttg.aaiot.credentials.IASCredentialStore;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import edu.cmu.sei.ttg.aaiot.tokens.FileTokenStorage;
 import edu.cmu.sei.ttg.aaiot.tokens.IRemovedTokenTracker;
@@ -175,7 +176,7 @@ public class AceClient implements IRemovedTokenTracker
      * @throws AceException
      */
     public boolean requestToken(String rsName, String rsScopes, String asIp, int port)
-            throws AceException, NoPermissionException, UnknownHostException
+            throws AceException, NoPermissionException, UnknownHostException, CoapException
     {
         if(credentialStore.getASPSK() == null)
         {
@@ -185,13 +186,20 @@ public class AceClient implements IRemovedTokenTracker
 
         byte[] keyBytes = credentialStore.getASPSK().get(KeyKeys.Octet_K).GetByteString();
         AceCoapClient asClient = new AceCoapClient(InetAddress.getByName(asIp).getHostAddress(), port, clientId, keyBytes);
-        Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
-        if(reply != null)
+
+        try
         {
-            resourceServers.put(rsName, new TokenInfo(rsName, reply));
-            tokenStore.storeToFile();
+            Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
+            if (reply != null)
+            {
+                resourceServers.put(rsName, new TokenInfo(rsName, reply));
+                tokenStore.storeToFile();
+            }
         }
-        asClient.stop();
+        finally
+        {
+            asClient.stop();
+        }
 
         return true;
     }
@@ -199,7 +207,8 @@ public class AceClient implements IRemovedTokenTracker
     /**
      * Puts a resource using PUT.
      */
-    public String putResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource, CBORObject payload) throws COSE.CoseException
+    public String putResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource, CBORObject payload)
+            throws COSE.CoseException, CoapException
     {
         return accessResource("put", rsName, rsIP, resourcePort, authPort, rsResource, payload);
     }
@@ -207,7 +216,8 @@ public class AceClient implements IRemovedTokenTracker
     /**
      * Requests a resource using GET.
      */
-    public String requestResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource) throws COSE.CoseException
+    public String requestResource(String rsName, String rsIP, int resourcePort, int authPort, String rsResource)
+            throws COSE.CoseException, CoapException
     {
         return accessResource("get", rsName, rsIP, resourcePort, authPort, rsResource, null);
     }
@@ -222,7 +232,7 @@ public class AceClient implements IRemovedTokenTracker
      * @throws COSE.CoseException
      */
     public String accessResource(String method, String rsName, String rsIP, int resourcePort, int authPort, String rsResource, CBORObject payload)
-            throws COSE.CoseException
+            throws COSE.CoseException, CoapException
     {
         if(!resourceServers.containsKey(rsName))
         {

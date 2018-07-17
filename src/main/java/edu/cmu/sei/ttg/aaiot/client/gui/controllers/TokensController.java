@@ -29,6 +29,7 @@ package edu.cmu.sei.ttg.aaiot.client.gui.controllers;
 
 import edu.cmu.sei.ttg.aaiot.client.AceClient;
 import edu.cmu.sei.ttg.aaiot.client.gui.models.Token;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.tokens.TokenInfo;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -119,6 +120,13 @@ public class TokensController
         {
             System.out.println(e.toString());
             new Alert(Alert.AlertType.WARNING, e.getMessage()).showAndWait();
+        }
+        catch(CoapException ex)
+        {
+            String errorMessage = "Token could not be obtained; server reported error " + ex.getErrorCode() + ": " +
+                    ex.getErrorName() + ". " + ex.getErrorDescription();
+            System.out.println(errorMessage);
+            new Alert(Alert.AlertType.WARNING, errorMessage).showAndWait();
         }
         catch(Exception e)
         {
