@@ -258,7 +258,7 @@ public class AceClient implements IRemovedTokenTracker
             }
             catch(RuntimeException ex)
             {
-                // Exception means server didn't answered or answered with an error.
+                // Exception means server didn't answer or answered with an error.
                 System.out.println("Could not post token");
                 throw ex;
             }
