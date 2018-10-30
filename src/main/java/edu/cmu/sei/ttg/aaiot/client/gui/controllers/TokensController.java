@@ -36,6 +36,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region;
 
 import javax.naming.NoPermissionException;
 import java.util.Map;
@@ -119,20 +120,25 @@ public class TokensController
         catch(NoPermissionException e)
         {
             System.out.println(e.toString());
-            new Alert(Alert.AlertType.WARNING, e.getMessage()).showAndWait();
+            Alert error = new Alert(Alert.AlertType.WARNING, e.getMessage());
+            error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            error.showAndWait();
         }
         catch(CoapException ex)
         {
             String errorMessage = "Token could not be obtained; server reported error " + ex.getErrorCode() + ": " +
                     ex.getErrorName() + ". " + ex.getErrorDescription();
             System.out.println(errorMessage);
-            new Alert(Alert.AlertType.WARNING, errorMessage).showAndWait();
+            Alert error = new Alert(Alert.AlertType.WARNING, errorMessage);
+            error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            error.showAndWait();
+
         }
         catch(Exception e)
         {
-            System.out.println("Error requesting token: " + e.toString());
-            //e.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "Error requesting token: " + e.toString()).showAndWait();
+            Alert error = new Alert(Alert.AlertType.ERROR, "Error requesting token: " + e.toString());
+            error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            error.showAndWait();
         }
     }
 }

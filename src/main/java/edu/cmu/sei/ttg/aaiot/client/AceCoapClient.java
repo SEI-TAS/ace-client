@@ -109,6 +109,7 @@ public class AceCoapClient extends CoapsPskClient
     public CBORObject requestResource(String resource, String method, CBORObject payload) throws COSE.CoseException, CoapException
     {
         // Key ID is needed in bytes by helper method.
+        System.out.println("Requesting resource: " + resource);
         CBORObject keyCbor = CBORObject.DecodeFromBytes(Base64.getDecoder().decode(keyId));
         byte[] keyIdBytes = keyCbor.get(KeyKeys.KeyId.AsCBOR()).GetByteString();
 
@@ -119,6 +120,7 @@ public class AceCoapClient extends CoapsPskClient
         OneKey fullKey = new OneKey(keyMap);
 
         // Get DTLS client properly setup for this type of request.
+        System.out.println("Getting PSK client");
         coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), keyIdBytes, fullKey);
 
         // Do the actual sending of the COAP(s) request.

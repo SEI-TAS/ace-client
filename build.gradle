@@ -23,7 +23,6 @@ distributions {
         contents {
             from ('config.json') { into "bin" }
             from ('credentials_client2.json') { into "bin" }
-            from ('tokens.json') { into "bin" }
         }
     }
 }
