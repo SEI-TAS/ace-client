@@ -85,9 +85,12 @@ public class ResourcesController
         }
         catch (Exception e)
         {
-            System.out.println("Error requesting resource: " + e.toString());
+            String errorMessage = "Error requesting resource: " + e.toString();
+            System.out.println(errorMessage);
             resultsTextArea.setText("");
-            new Alert(Alert.AlertType.ERROR, "Error requesting resource: " + e.getMessage()).showAndWait();
+            Alert error = new Alert(Alert.AlertType.ERROR, errorMessage);
+            error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            error.showAndWait();
         }
     }
 
