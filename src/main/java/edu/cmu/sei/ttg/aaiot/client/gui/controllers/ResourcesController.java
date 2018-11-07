@@ -34,6 +34,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region;
 
 /**
  * Created by sebastianecheverria on 11/20/17.
@@ -67,6 +68,7 @@ public class ResourcesController
         {
             int resourcePort = Integer.parseInt(deviceCoapsPortTextField.getText());
             int authPort = Integer.parseInt(deviceCoapPortTextField.getText());
+            resultsTextArea.setText("<Waiting for result...>");
             String result = AceClient.getInstance().requestResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
                     resourcePort, authPort, resourceTextField.getText());
             resultsTextArea.setText(result);
@@ -76,11 +78,15 @@ public class ResourcesController
             String errorMessage = "Resource could not be obtained; server reported error " + ex.getErrorCode() + ": " +
                     ex.getErrorName() + ". " + ex.getErrorDescription();
             System.out.println(errorMessage);
-            new Alert(Alert.AlertType.WARNING, errorMessage).showAndWait();
+            resultsTextArea.setText("");
+            Alert error = new Alert(Alert.AlertType.WARNING, errorMessage);
+            error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            error.showAndWait();
         }
         catch (Exception e)
         {
             System.out.println("Error requesting resource: " + e.toString());
+            resultsTextArea.setText("");
             new Alert(Alert.AlertType.ERROR, "Error requesting resource: " + e.getMessage()).showAndWait();
         }
     }
@@ -107,7 +113,7 @@ public class ResourcesController
             {
                 cborPayload = CBORObject.FromObject(payload);
             }
-            resultsTextArea.setText("");
+            resultsTextArea.setText("<Waiting for result...>");
 
             String result = AceClient.getInstance().putResource(deviceIdTextField.getText(), deviceIpTextField.getText(),
                     resourcePort, authPort, resourceTextField.getText(), cborPayload);
@@ -118,11 +124,15 @@ public class ResourcesController
             String errorMessage = "Resource could not be put; server reported error " + ex.getErrorCode() + ": " +
             ex.getErrorName() + ". " + ex.getErrorDescription();
             System.out.println(errorMessage);
-            new Alert(Alert.AlertType.WARNING, errorMessage).showAndWait();
+            resultsTextArea.setText("");
+            Alert error = new Alert(Alert.AlertType.WARNING, errorMessage);
+            error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            error.showAndWait();
         }
         catch (Exception e)
         {
             System.out.println("Error putting resource: " + e.toString());
+            resultsTextArea.setText("");
             new Alert(Alert.AlertType.ERROR, "Error requesting resource: " + e.getMessage()).showAndWait();
         }
 
