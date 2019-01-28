@@ -72,7 +72,7 @@ public class AceClient implements IRemovedTokenTracker
     public static final int DEFAULT_RS_COAPS_PORT = 5684;
 
     // Default COAPS port, used for AS.
-    public static final int DEFAULT_AS_COAPS_PORT = 5685;
+    public static final int DEFAULT_AS_COAPS_PORT = 5684;
 
     // Stores AS credentials.
     private IASCredentialStore credentialStore;
