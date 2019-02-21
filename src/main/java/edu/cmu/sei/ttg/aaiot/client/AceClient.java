@@ -176,7 +176,7 @@ public class AceClient implements IRemovedTokenTracker
      * @throws AceException
      */
     public boolean requestToken(String rsName, String rsScopes, String asIp, int port)
-            throws AceException, NoPermissionException, UnknownHostException, CoapException
+            throws NoPermissionException, UnknownHostException, CoapException
     {
         if(credentialStore.getASPSK() == null)
         {
@@ -189,7 +189,7 @@ public class AceClient implements IRemovedTokenTracker
 
         try
         {
-            Map<String, CBORObject> reply = asClient.getAccessToken(rsScopes, rsName);
+            CBORObject reply = asClient.getAccessToken(rsScopes, rsName);
             if (reply != null)
             {
                 resourceServers.put(rsName, new TokenInfo(rsName, reply));
@@ -259,7 +259,7 @@ public class AceClient implements IRemovedTokenTracker
             catch(RuntimeException ex)
             {
                 // Exception means server didn't answer or answered with an error.
-                System.out.println("Could not post token");
+                System.out.println("Could not post token: " + ex.toString());
                 throw ex;
             }
             finally

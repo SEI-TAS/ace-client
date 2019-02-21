@@ -32,6 +32,14 @@ import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
+import org.eclipse.californium.core.CoapClient;
+import org.eclipse.californium.core.network.CoapEndpoint;
+import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.elements.Connector;
+import org.eclipse.californium.scandium.DTLSConnector;
+import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
+import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
+import org.eclipse.californium.scandium.dtls.pskstore.InMemoryPskStore;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 import se.sics.ace.as.Token;
@@ -57,11 +65,11 @@ public class AceCoapClient extends CoapsPskClient
      * Obtains an access token from the AS.
      * @param scopes The list of scopes, separated by spaces, for which the token will be valid.
      * @param audience The audience we want to use this token with.
-     * @return A map of the reply of the AS, including the token and the POP key to use to secure DTLS connections.
+     * @return A CBOR map of the reply of the AS, including the token and the POP key to use to secure DTLS connections.
      * @throws AceException
      * @throws NoPermissionException
      */
-    public Map<String, CBORObject> getAccessToken(String scopes, String audience) throws AceException, NoPermissionException, CoapException
+    public CBORObject getAccessToken(String scopes, String audience) throws NoPermissionException, CoapException
     {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.GRANT_TYPE, Token.clientCredentials);
@@ -75,8 +83,7 @@ public class AceCoapClient extends CoapsPskClient
         }
         else
         {
-            // Convert all int keys back into string keys to process them more easily.
-            return Constants.unabbreviate(reply);
+            return reply;
         }
     }
 
@@ -121,9 +128,55 @@ public class AceCoapClient extends CoapsPskClient
 
         // Get DTLS client properly setup for this type of request.
         System.out.println("Getting PSK client");
-        coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), keyIdBytes, fullKey);
+        coapClient = AceCoapClient.getPskClient(new InetSocketAddress(serverName, serverPort), keyIdBytes, fullKey);
 
         // Do the actual sending of the COAP(s) request.
         return sendRequest(resource, method, payload);
+    }
+
+    /**
+     * Generates a Coap client for sending requests to an RS that will pass the
+     *  kid of a known access token through psk-identity in the DTLS handshake.
+     * @param serverAddress  the address of the server and resource this client
+     *  should talk to
+     * @param kid  the kid that the client should use as PSK in the handshake
+     * @param key  the pre-shared key for use with this server.
+     *
+     * @return  a CoAP client configured to pass the access token through the
+     *  psk-identity in the handshake
+     */
+    private static CoapClient getPskClient(InetSocketAddress serverAddress, byte[] kid, OneKey key) {
+        if (serverAddress == null ) {
+            throw new IllegalArgumentException("Client requires a non-null server address");
+        }
+        if (kid == null) {
+            throw new IllegalArgumentException("PSK client requires a non-null kid");
+        }
+        if (key == null || key.get(KeyKeys.Octet_K) == null) {
+            throw new IllegalArgumentException("PSK  client requires a non-null symmetric key");
+        }
+
+        System.out.println("Building DTLS connector config.");
+        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder().setAddress(new InetSocketAddress(0));
+        builder.setClientAuthenticationRequired(true);
+        builder.setClientOnly();
+        builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
+
+        System.out.println("Setting temp PSK store.");
+        InMemoryPskStore store = new InMemoryPskStore();
+        String identity = new String(kid, Constants.charset);
+        System.out.println("Adding key for: " + serverAddress.toString());
+        store.addKnownPeer(serverAddress, identity, key.get(KeyKeys.Octet_K).GetByteString());
+        builder.setPskStore(store);
+
+        System.out.println("Building DTLS connector and endpoint.");
+        Connector c = new DTLSConnector(builder.build());
+        CoapEndpoint e = new CoapEndpoint.CoapEndpointBuilder()
+                .setConnector(c).setNetworkConfig(NetworkConfig.getStandard()).build();
+
+        System.out.println("Creating Coaps client on the given endpoint.");
+        CoapClient client = new CoapClient(serverAddress.toString());
+        client.setEndpoint(e);
+        return client;
     }
 }
