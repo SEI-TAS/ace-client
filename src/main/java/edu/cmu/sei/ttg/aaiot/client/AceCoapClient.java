@@ -175,7 +175,7 @@ public class AceCoapClient extends CoapsPskClient
                 .setConnector(c).setNetworkConfig(NetworkConfig.getStandard()).build();
 
         System.out.println("Creating Coaps client on the given endpoint.");
-        CoapClient client = new CoapClient(serverAddress.toString());
+        CoapClient client = new CoapClient(serverAddress.getHostString());
         client.setEndpoint(e);
         return client;
     }
