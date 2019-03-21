@@ -15,3 +15,4 @@ out/
 /classes
 credentials.json
 tokens.json
+.DS_Store
