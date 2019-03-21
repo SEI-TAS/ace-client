@@ -74,7 +74,7 @@ public class AceCoapClient extends CoapsPskClient
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.GRANT_TYPE, Token.clientCredentials);
         params.Add(Constants.SCOPE, CBORObject.FromObject(scopes));
-        params.Add(Constants.AUD, CBORObject.FromObject(audience));
+        params.Add(Constants.AUDIENCE, CBORObject.FromObject(audience));
 
         CBORObject reply = sendRequest("token", "post", params);
         if(reply == null)
