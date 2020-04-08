@@ -32,14 +32,7 @@ import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
-import org.eclipse.californium.core.CoapClient;
-import org.eclipse.californium.core.network.CoapEndpoint;
-import org.eclipse.californium.core.network.config.NetworkConfig;
-import org.eclipse.californium.elements.Connector;
-import org.eclipse.californium.scandium.DTLSConnector;
-import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
-import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
-import org.eclipse.californium.scandium.dtls.pskstore.InMemoryPskStore;
+
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 import se.sics.ace.as.Token;
@@ -48,7 +41,6 @@ import se.sics.ace.coap.client.DTLSProfileRequests;
 import javax.naming.NoPermissionException;
 import java.net.InetSocketAddress;
 import java.util.Base64;
-import java.util.Map;
 
 /**
  * Created by Sebastian on 2017-03-17.
@@ -131,7 +123,10 @@ public class AceCoapClient extends CoapsPskClient
         coapClient = DTLSProfileRequests.getPskClient(new InetSocketAddress(serverName, serverPort), keyIdBytes, fullKey);
 
         // Do the actual sending of the COAP(s) request.
-        return sendRequest(resource, method, payload);
+        CBORObject response = sendRequest(resource, method, payload);
+        this.closeConnection();
+
+        return response;
     }
 
 }
