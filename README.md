@@ -17,3 +17,5 @@ No configuration is needed. Optional parameters are available in "config.json":
 The main entry class is edu.cmu.sei.ttg.aaiot.client.gui.FXApplication. This starts the GUI. A simple way to start it from gradle is with `./gradlew run`
 
 Retrieved tokens are stored in tokens.json. To clear all stored tokens, simply delete this file.
+
+For more information, see https://github.com/SEI-TAS/ace-client/wiki
