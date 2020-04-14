@@ -69,7 +69,7 @@ public class AceClient implements IRemovedTokenTracker
     // Default connection info for RS.
     public static final String DEFAULT_RS_IP = "localhost";
     public static final int DEFAULT_RS_COAP_PORT = 5683;
-    public static final int DEFAULT_RS_COAPS_PORT = 5684;
+    public static final int DEFAULT_RS_COAPS_PORT = 5687;
 
     // Default COAPS port, used for AS.
     public static final int DEFAULT_AS_COAPS_PORT = 5684;
