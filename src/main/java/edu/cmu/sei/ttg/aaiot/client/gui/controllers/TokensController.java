@@ -39,6 +39,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 
 import javax.naming.NoPermissionException;
+import java.net.InetAddress;
 import java.util.Map;
 
 /**
@@ -61,7 +62,11 @@ public class TokensController
         try
         {
             // Default IP and port.
-            asIpTextField.setText(AceClient.getInstance().getCredentialStore().getASIP().getHostAddress());
+            InetAddress currentASIP = AceClient.getInstance().getCredentialStore().getASIP();
+            if(currentASIP != null)
+                asIpTextField.setText(currentASIP.getHostAddress());
+            else
+                asIpTextField.setText("localhost");
             asCoapsPortTextField.setText(String.valueOf(AceClient.DEFAULT_AS_COAPS_PORT));
 
             fillTable();
